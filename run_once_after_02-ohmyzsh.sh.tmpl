@@ -8,6 +8,20 @@
 # which would hang a non-interactive apply.
 set -euo pipefail
 
+# Each run_once_*.sh is its own separate process -- the brew shellenv exported
+# inside run_once_before_00's script body dies with that script, it never
+# reaches this one. Without re-establishing it here, oh-my-zsh's installer
+# runs its own internal `command -v zsh` check against a PATH that doesn't
+# yet include wherever brew just installed zsh (this bit on a fresh Linux
+# box: brew reported zsh installed, this script still couldn't find it).
+if [ -x /opt/homebrew/bin/brew ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -x /usr/local/bin/brew ]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
   KEEP_ZSHRC=yes RUNZSH=no CHSH=no \
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
