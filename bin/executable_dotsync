@@ -4,9 +4,10 @@
 #   1. pulls local edits to managed files back into the chezmoi source repo
 #   2. secret-scans that source tree; a hit stops everything before it leaves
 #   3. ASKS before sending anything to GitHub, then commits and pushes
-#   4. pulls whatever another machine pushed, then applies it here
+#   4. pulls whatever another machine pushed, reports what it changed, and
+#      applies it here
 #   5. reloads herdr's config, the one running program here that can re-read
-#      it in place (Ghostty/zsh/nvim still need a restart or a new shell)
+#      it in place, and names anything else that needs a restart
 #
 # Step 3 always asks. Declining skips the commit and the push; the pull and
 # apply still run, so "no" still gets this machine up to date. Local edits
@@ -110,6 +111,7 @@ if [ "$PUSH" = yes ] && [ -n "$DIRTY" ]; then
 fi
 
 echo "==> Pulling from GitHub"
+BEFORE_REV="$(git -C "$SRC" rev-parse HEAD)"
 git_net pull --rebase --autostash || {
   echo "dotsync: pull stopped, most likely a conflict. Resolve it in $SRC" >&2
   echo "         ('git status' there will say whether it's a rebase or a stash pop)," >&2
@@ -117,9 +119,27 @@ git_net pull --rebase --autostash || {
   exit 1
 }
 
+AFTER_REV="$(git -C "$SRC" rev-parse HEAD)"
+if [ "$BEFORE_REV" != "$AFTER_REV" ]; then
+  echo "    picked up $(git -C "$SRC" rev-list --count "$BEFORE_REV..$AFTER_REV") commit(s):"
+  git -C "$SRC" log --oneline --no-decorate "$BEFORE_REV..$AFTER_REV" | sed 's/^/      /'
+fi
+
 if [ "$PUSH" = yes ]; then
   echo "==> Pushing to GitHub"
   git_net push
+fi
+
+# What apply is about to change in $HOME. `chezmoi re-add` above already made
+# the source match this machine for every managed file, so anything still
+# listed here arrived in the pull -- i.e. it is exactly what another machine
+# changed.
+PENDING="$(chezmoi status 2>/dev/null || true)"
+if [ -n "$PENDING" ]; then
+  echo "==> Changing on this machine:"
+  printf '%s\n' "$PENDING" | sed 's/^/    /'
+else
+  echo "==> Nothing on this machine to change"
 fi
 
 echo "==> Applying to this machine"
@@ -137,8 +157,23 @@ if [ -x "$HERDR" ] && [ -z "${HERDR_CONFIG_PATH:-}" ] && [ -S "$HOME/.config/her
     || echo "    reload failed -- run 'herdr server reload-config' by hand" >&2
 fi
 
-# Ghostty, zsh and nvim have no equivalent: their configs are on disk now,
-# but a running instance needs a restart (Ghostty: Cmd+Shift+, / relaunch;
-# zsh: a new shell; nvim: relaunch) before the change takes effect.
+# Ghostty, zsh and nvim have no reload equivalent: their configs are on disk
+# now, but a running instance keeps using what it read at startup. Only say so
+# for the ones that actually changed this run.
+if [ -n "$PENDING" ]; then
+  RESTARTS=""
+  add_restart() {
+    if printf '%s\n' "$PENDING" | rg -q "$1"; then
+      RESTARTS="${RESTARTS}    $2"$'\n'
+    fi
+  }
+  add_restart 'config/ghostty' 'Ghostty -- Cmd+Shift+, or relaunch it'
+  add_restart 'config/zsh'     'zsh -- open a new shell (or: exec zsh)'
+  add_restart 'config/nvim'    'nvim -- relaunch it'
+  if [ -n "$RESTARTS" ]; then
+    echo "==> Not picked up until you restart:"
+    printf '%s' "$RESTARTS"
+  fi
+fi
 
 echo "==> dotsync complete"
