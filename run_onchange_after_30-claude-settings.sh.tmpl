@@ -6,6 +6,13 @@
 # (which on the source machine also carries a live credential in
 # env.SNC_INSTANCES that must never leave that machine).
 #
+# run_onchange_, not run_once_: this script only reads claude-settings-patch.json
+# at runtime, so chezmoi's run_once tracking (hashes the script's own
+# rendered content) is blind to edits made to that file alone. Same bug
+# class hit for real with Brewfile -- see run_onchange_before_00-brew.sh.tmpl.
+# The merge is idempotent (jq dedup on the array fields), safe to rerun.
+# claude-settings-patch.json hash: {{ include "claude-settings-patch.json" | sha256sum }}
+#
 # enabledPlugins / extraKnownMarketplaces are plain objects, so a `*` merge
 # unions keys without disturbing anything already there. permissions.ask/deny
 # and hooks.PostToolUse are arrays, which `*` would replace outright, so
