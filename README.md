@@ -98,8 +98,12 @@ approach failed during testing.
 - **nvim** (`~/.config/nvim/`) — LazyVim-based, VS Code-ish explorer/preview
   behavior, Tokyo Night theme, diffview for merge conflict resolution,
   `lazy-lock.json` pinned so plugin versions match what was actually tested.
-- **zsh** (`~/.config/zsh/workflow.zsh`) — tool env vars (bat/fzf) and eza/bat
-  aliases. Wired into `~/.zshrc` via one idempotent appended `source` line, not by
+- **zsh** (`~/.config/zsh/workflow.zsh`) — oh-my-zsh (installed + activated here,
+  `robbyrussell` theme, 4 community plugins), a stale-worktree cwd guard, tool env
+  vars (bat/fzf), worktrunk's shell integration (`wt switch` needs this to actually
+  `cd` the shell — easy to miss, it's not optional), guarded `tv`/`atuin`/`zoxide`
+  inits, and a handful of generic aliases (`cr`/`c`/`cc` for Claude Code, `copypath`,
+  `gtask`). Wired into `~/.zshrc` via one idempotent appended `source` line, not by
   managing `.zshrc` directly — that file commonly already has real personal content
   on any machine this runs on.
 - **worktrunk** (`~/.config/worktrunk/config.toml`) — sibling-directory worktree
@@ -123,10 +127,23 @@ approach failed during testing.
 
 Anything ServiceNow-specific: the BT1/servicenow-mcp setup, the `dcg` pre-tool-use
 hook, `gh-dash`/`wt-new-session`/`gh-dash-open-pr` (wired to SN repos and a specific
-GitHub login), the `wdf`/`servicenow`/`cc-marketplace` plugin marketplaces. Also
-`terminal-browser` and its `alt+b` herdr binding — broken by an unresolved upstream
-bug ([zenbu-labs/terminal-browser#97](https://github.com/zenbu-labs/terminal-browser/issues/97));
+GitHub login), the `wdf`/`servicenow`/`cc-marketplace` plugin marketplaces, the
+`now/homebrew-devtools` tap, the `gh-dash` alias (hardcodes `code.devsnc.com`), the
+500-line `ai-search()` function and `fastzboot`/`gll-snapshot()` (SN/DCG build
+tooling). Also `terminal-browser` and its `alt+b` herdr binding — broken by an
+unresolved upstream bug
+([zenbu-labs/terminal-browser#97](https://github.com/zenbu-labs/terminal-browser/issues/97));
 add it back once that's fixed.
+
+Also excluded, not SN-specific but not generically useful either: `oktafy()`/
+`workondw()` (tied to a "Data.world" job/project context, reference undefined env
+vars), iTerm2-specific bits (`_iterm2_tab_color`, iTerm2 shell integration — this
+whole setup is Ghostty-primary), and the `claude-usage`/`claude-worktree` aliases
+(point at `~/.claude/scripts/*.sh` that were never verified to still exist or work —
+add them back yourself if they do). `asdf` was dropped from the oh-my-zsh plugin
+list for the same reason nvm/pnpm/IntelliJ's PATH entries were left un-installed —
+outside this repo's stated scope (their inert PATH lines are still here; the plugin
+would not be).
 
 ## Security note
 
