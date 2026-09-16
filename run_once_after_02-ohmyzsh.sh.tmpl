@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# oh-my-zsh + the 4 community plugins the herdr workflow's .zshrc expects
+# (autosuggestions, completions, history-substring-search, syntax-highlighting).
+# KEEP_ZSHRC=yes stops oh-my-zsh's own installer from backing up and
+# replacing ~/.zshrc with its template -- run_once_after_05 is about to
+# append one idempotent line to whatever's already there, and this must
+# not clobber that. RUNZSH=no stops it launching a new shell mid-script,
+# which would hang a non-interactive apply.
+set -euo pipefail
+
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+  KEEP_ZSHRC=yes RUNZSH=no CHSH=no \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+else
+  echo "oh-my-zsh already installed, skipping"
+fi
+
+ZSH_CUSTOM="$HOME/.oh-my-zsh/custom/plugins"
+mkdir -p "$ZSH_CUSTOM"
+
+for repo in \
+  zsh-users/zsh-autosuggestions \
+  zsh-users/zsh-completions \
+  zsh-users/zsh-history-substring-search \
+  zsh-users/zsh-syntax-highlighting
+do
+  name="${repo#*/}"
+  if [ -d "$ZSH_CUSTOM/$name" ]; then
+    echo "$name already present, skipping"
+  else
+    git clone --depth 1 -q "https://github.com/$repo.git" "$ZSH_CUSTOM/$name"
+  fi
+done
