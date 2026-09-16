@@ -2,6 +2,9 @@
 # a usable login shell -- oh-my-zsh's installer (run_once_after_02) requires
 # it to already exist. Harmless/idempotent to also brew-install on macOS.
 brew "zsh"
+brew "neovim"
+brew "ripgrep"
+brew "yazi"
 brew "worktrunk"
 brew "zoxide"
 brew "fzf"
