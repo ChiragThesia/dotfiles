@@ -4,6 +4,7 @@
 README.md
 Brewfile
 claude-settings-patch.json
+docs
 
 # Files a given machine keeps its own real, diverged version of. Applying
 # this repo's generic copy there would silently revert real customization.
