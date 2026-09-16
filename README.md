@@ -16,6 +16,64 @@ bat, lazygit, jq, bun), then herdr itself (not on Homebrew — its own installer
 wires herdr's worktrunk plugin, merges a curated set of Claude Code settings, and
 installs the `caveman` and `claude-hud` Claude Code plugins fresh.
 
+## For Claude Code sessions working on this repo — follow exactly, in order
+
+These are the actual commands verified to work while building this repo. Do not
+improvise alternatives to the flagged steps; each one exists because the obvious
+approach failed during testing.
+
+### Pulling / applying (any machine that is NOT the machine this repo was authored on)
+
+1. First time on a machine: `brew install chezmoi && chezmoi init --apply chiragthesia/dotfiles`.
+2. Updating a machine already set up this way: `chezmoi update` (equivalent to
+   `cd "$(chezmoi source-path)" && git pull --autostash && chezmoi apply` — either form is fine).
+3. **STOP before running either command if `hostname` / the user confirms this is the
+   machine the repo was originally built on.** The source tree deliberately diverges
+   from that machine's real config in several places (SN-specific hooks stripped,
+   etc.) — applying there reverts real, intentional customization on that machine.
+   If genuinely unsure which machine this is, ask the user before running `apply`.
+4. Never run `chezmoi apply`/`chezmoi diff` with no arguments as a way to "check what
+   would happen" without reading the diff first — always `chezmoi diff` and actually
+   read it before the first real `apply` on any machine you haven't applied to before.
+
+### Pushing changes (adding/editing anything in this repo)
+
+1. Work in the chezmoi source dir: `cd "$(chezmoi source-path)"` (or wherever this
+   repo is checked out if not managed via `chezmoi`).
+2. Adding a new dotfile from a real path on disk: `chezmoi add <path>` — it names the
+   file correctly (`dot_` / `executable_` prefixes) automatically. Don't hand-name
+   files unless you're creating one that has no real counterpart on disk yet.
+3. **If you touched any `*.sh.tmpl` script**, render and syntax-check it before
+   committing — do not skip this:
+   ```bash
+   chezmoi execute-template < path/to/script.sh.tmpl | bash -n /dev/stdin && echo OK
+   ```
+4. **Run a secret scan over the whole tree before every commit, no exceptions:**
+   ```bash
+   rg -i 'password|secret|SNC_INSTANCES|api[_-]?key|token.*:.*[A-Za-z0-9]{20}' "$(chezmoi source-path)" --glob '!.git'
+   ```
+   Any real hit (not a git commit hash, not prose mentioning the word "token") means
+   **stop and do not commit** until it's resolved. This is the single most important
+   rule in this file.
+5. **Never read a real `~/.claude/settings.json` (or any other file known to carry
+   live credentials) into this repo, not even temporarily.** If a settings change is
+   needed, hand-edit `claude-settings-patch.json` directly — it is a hand-authored
+   literal, deliberately never derived from the real file. Same principle for any
+   future file that might carry secrets on some machine: author a clean version from
+   scratch, don't copy-then-strip.
+6. Review before committing: `git add -A && git status --short` — confirm nothing
+   unexpected is staged.
+7. Commit, then push. **`git push` alone will hang** on this machine waiting on a
+   macOS Keychain dialog that a non-interactive agent session cannot approve — use
+   this instead, every time:
+   ```bash
+   TOKEN=$(gh auth token --hostname github.com)
+   git -c credential.helper= -c "http.https://github.com/.extraheader=Authorization: basic $(printf 'x-access-token:%s' "$TOKEN" | base64)" push
+   ```
+   Requires `gh auth login` (github.com, not an enterprise host) to already be done
+   on whatever machine is running this. If that push command itself fails, do not
+   fall back to plain `git push` and wait — report the failure instead of hanging.
+
 ## Manual steps after the first apply
 
 - **Reload or restart Ghostty once.** A handful of `keybind = ...=unbind` lines and
