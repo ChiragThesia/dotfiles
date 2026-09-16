@@ -20,8 +20,12 @@ esac
 [ -d "/Applications/IntelliJ IDEA.app" ] && export PATH="/Applications/IntelliJ IDEA.app/Contents/MacOS:$PATH"
 
 # oh-my-zsh (installed by run_once_after_02, KEEP_ZSHRC=yes so its own
-# installer never touches this file -- activation lives here instead)
-if [ -d "$HOME/.oh-my-zsh" ]; then
+# installer never touches this file -- activation lives here instead).
+# The `omz` guard skips this block on a machine whose .zshrc already
+# sources oh-my-zsh itself: a second source re-sets PROMPT to ZSH_THEME,
+# which silently overrides a prompt (starship etc.) set earlier in .zshrc,
+# and duplicates precmd hooks.
+if [ -d "$HOME/.oh-my-zsh" ] && ! typeset -f omz >/dev/null 2>&1; then
   export ZSH="$HOME/.oh-my-zsh"
   ZSH_THEME="robbyrussell"
   plugins=(
