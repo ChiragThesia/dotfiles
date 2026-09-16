@@ -1,20 +1,42 @@
 # dotfiles
 
 Personal herdr + Ghostty + nvim terminal workflow, managed with [chezmoi](https://chezmoi.io).
-macOS only — Ghostty.app, Homebrew, and macOS's Option-key remapping are load-bearing
-throughout this. Nothing here has been tried on Linux/Windows.
+Built and daily-driven on macOS, where Ghostty.app and macOS's Option-key remapping
+are load-bearing. The CLI half (herdr, nvim, worktrunk, zsh) is cross-platform and
+also targets headless Linux boxes (e.g. a fresh EC2 instance you SSH into) — see
+[Linux / headless boxes](#linux--headless-boxes) below for what that gets you.
 
 ## Install
 
+One command, no prerequisites beyond `curl` (present on essentially every macOS and
+Linux box, including a stock EC2 AMI):
+
 ```bash
-brew install chezmoi
-chezmoi init --apply chiragthesia/dotfiles
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply chiragthesia/dotfiles
 ```
 
-That installs everything brew-installable (Ghostty, worktrunk, zoxide, fzf, fd, eza,
-bat, lazygit, jq, bun), then herdr itself (not on Homebrew — its own installer),
-wires herdr's worktrunk plugin, merges a curated set of Claude Code settings, and
-installs the `caveman` and `claude-hud` Claude Code plugins fresh.
+This installs chezmoi itself first (no Homebrew required for that step — chezmoi's
+own installer just downloads its binary), then runs `chezmoi init --apply`, which
+installs Homebrew if it's missing, installs everything brew-installable (worktrunk,
+zoxide, fzf, fd, eza, bat, lazygit, jq, bun, plus Ghostty on macOS only — see below),
+installs herdr itself (not on Homebrew — its own installer), wires herdr's worktrunk
+plugin, merges a curated set of Claude Code settings, and installs the `caveman` and
+`claude-hud` Claude Code plugins fresh.
+
+Already have Homebrew and prefer that path: `brew install chezmoi && chezmoi init
+--apply chiragthesia/dotfiles` works identically.
+
+## Linux / headless boxes
+
+`Brewfile` (cross-platform tools) and `Brewfile.darwin` (just `cask "ghostty"`) are
+split, and `run_once_before_00-brew.sh.tmpl` only bundles the `.darwin` one when
+`.chezmoi.os == "darwin"`. On Linux this skips Ghostty entirely — it's a GUI app with
+no reason to run on a remote box; you SSH into the box *from* Ghostty on your Mac, not
+the other way around. What you get on a Linux box: herdr (publishes native Linux
+binaries), nvim, worktrunk, zsh workflow, all fully functional. herdr's own
+`--remote <ssh-target>` flag then attaches your local herdr client to the server this
+apply just installed remotely — but that flag only *attaches*, it doesn't bootstrap;
+herdr has to already be running there, which is exactly what this apply does for you.
 
 ## Keybindings and config reference
 
@@ -70,7 +92,8 @@ approach failed during testing.
 
 ### Pulling / applying (any machine that is NOT the machine this repo was authored on)
 
-1. First time on a machine: `brew install chezmoi && chezmoi init --apply chiragthesia/dotfiles`.
+1. First time on a machine: `sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply chiragthesia/dotfiles`
+   (or `brew install chezmoi && chezmoi init --apply chiragthesia/dotfiles` if Homebrew's already there).
 2. Updating a machine already set up this way: `chezmoi update` (equivalent to
    `cd "$(chezmoi source-path)" && git pull --autostash && chezmoi apply` — either form is fine).
 3. **STOP before running either command if `hostname` / the user confirms this is the
