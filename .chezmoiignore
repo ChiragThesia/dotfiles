@@ -1,0 +1,12 @@
+# Source-repo files with no target in $HOME. Without these, chezmoi writes
+# README.md / Brewfile / claude-settings-patch.json straight into the home
+# directory. Scripts still reach them via {{ .chezmoi.sourceDir }}.
+README.md
+Brewfile
+claude-settings-patch.json
+
+# This machine keeps its own lean ~/.claude/CLAUDE.md. The copy in this repo
+# is the authoring machine's, which carries ServiceNow-specific sections.
+{{ if eq .chezmoi.hostname "Chiragss-MacBook-Pro" }}
+.claude/CLAUDE.md
+{{ end }}

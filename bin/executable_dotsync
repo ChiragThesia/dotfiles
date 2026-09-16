@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# dotsync -- one command to reconcile this machine with the dotfiles repo.
+#
+#   1. pulls local edits to managed files back into the chezmoi source repo
+#   2. secret-scans that source tree; a hit stops everything before it leaves
+#   3. commits and pushes to GitHub
+#   4. pulls whatever another machine pushed, then applies it here
+#
+# Usage: dotsync ["commit message"]
+set -euo pipefail
+
+SRC="$(chezmoi source-path)"
+MSG="${1:-dotsync from $(hostname -s) on $(date +%Y-%m-%d)}"
+
+# `git push` over an https remote hangs on a macOS Keychain dialog that a
+# non-interactive session can never approve, so an https remote is pushed
+# with a gh-issued token instead. An ssh remote needs none of this.
+git_remote_auth() {
+  local url
+  url="$(git -C "$SRC" remote get-url origin)"
+  if [[ "$url" == https://* ]] && command -v gh >/dev/null 2>&1; then
+    local tok
+    tok="$(gh auth token --hostname github.com)"
+    printf '%s\0%s\0' \
+      '-c' "http.https://github.com/.extraheader=Authorization: basic $(printf 'x-access-token:%s' "$tok" | base64)"
+  fi
+}
+
+git_net() {
+  local -a auth=()
+  while IFS= read -r -d '' arg; do auth+=("$arg"); done < <(git_remote_auth)
+  git -C "$SRC" -c credential.helper= "${auth[@]}" "$@"
+}
+
+echo "==> Capturing local edits to managed files"
+chezmoi re-add
+
+echo "==> Secret scan"
+if rg -n --glob '!.git' \
+  -e 'gh[pousr]_[A-Za-z0-9]{36}' \
+  -e 'sk-ant-[A-Za-z0-9_-]{20,}' \
+  -e 'AKIA[0-9A-Z]{16}' \
+  -e 'BEGIN [A-Z ]*PRIVATE KEY' \
+  -e 'SNC_INSTANCES\s*[:=]\s*\S' \
+  -e '(?i)(password|passwd|api[_-]?key|secret|token)"?\s*[:=]\s*["'"'"'][^"'"'"']{12,}' \
+  "$SRC"; then
+  echo "dotsync: secret scan hit the lines above. Nothing committed, nothing pushed." >&2
+  exit 1
+fi
+
+if [ -n "$(git -C "$SRC" status --porcelain)" ]; then
+  echo "==> Committing local changes"
+  git -C "$SRC" add -A
+  git -C "$SRC" commit -q -m "$MSG"
+else
+  echo "==> No local changes to commit"
+fi
+
+echo "==> Pulling from GitHub"
+git_net pull --rebase --autostash || {
+  echo "dotsync: rebase stopped. Resolve in $SRC, 'git rebase --continue', then re-run dotsync." >&2
+  exit 1
+}
+
+echo "==> Pushing to GitHub"
+git_net push
+
+echo "==> Applying to this machine"
+chezmoi apply
+
+echo "==> dotsync complete"
