@@ -5,8 +5,19 @@ README.md
 Brewfile
 claude-settings-patch.json
 
-# This machine keeps its own lean ~/.claude/CLAUDE.md. The copy in this repo
-# is the authoring machine's, which carries Acme-specific sections.
-{{ if eq .chezmoi.hostname "personal-machine" }}
+# Machines that keep their own real, customized versions of files this repo
+# also carries a generic version of -- applying here would silently revert
+# real, intentional divergence. "personal-machine" was already here
+# (unverified whether it's a real second machine or a guess -- kept rather
+# than removed, since dropping it if it IS real would be worse than a dead
+# entry if it isn't). work-machine is this repo's own authoring machine,
+# confirmed via `chezmoi execute-template '{{ .chezmoi.hostname }}'` -- its
+# real ~/.claude/CLAUDE.md carries Acme-specific sections this repo's
+# copy also has (so CLAUDE.md itself doesn't strictly need protecting here,
+# but costs nothing to include), and its real worktrunk/config.toml carries
+# post-start hooks (open-wt-session, codegraph) this repo's copy deliberately
+# strips.
+{{ if or (eq .chezmoi.hostname "personal-machine") (eq .chezmoi.hostname "work-machine") }}
 .claude/CLAUDE.md
+.config/worktrunk/config.toml
 {{ end }}
