@@ -1,0 +1,26 @@
+{
+  "lineLayout": "expanded",
+  "showSeparators": false,
+  "gitStatus": {
+    "enabled": true,
+    "showDirty": true,
+    "showAheadBehind": false,
+    "showFileStats": false
+  },
+  "display": {
+    "showModel": true,
+    "showContextBar": true,
+    "showTools": false,
+    "showAgents": false,
+    "showTodos": false,
+    "showDuration": true,
+    "showConfigCounts": true,
+    "showSessionName": true,
+    "showTokenBreakdown": true,
+    "showSessionTokens": true,
+    "showSpeed": true,
+    "showUsage": true,
+    "usageCompact": true,
+    "customLine": "caveman: ultra"
+  }
+}

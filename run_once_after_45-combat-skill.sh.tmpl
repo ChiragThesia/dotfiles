@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# `combat` (the rationalist-skills toolkit, combat:murphyjitsu etc.) isn't
+# tracked by Claude Code's marketplace/plugin system at all -- it was
+# dropped straight into ~/.claude/skills/combat by cloning its upstream repo
+# and relocating .claude/skills -> combat/skills. Clone fresh here rather
+# than freeze a copy, so it stays current with upstream; the
+# .claude-plugin/plugin.json manifest (which upstream doesn't ship) is the
+# one piece this repo carries directly, already placed by chezmoi's main
+# apply pass at ~/.claude/skills/combat/.claude-plugin/plugin.json.
+set -euo pipefail
+
+TARGET="$HOME/.claude/skills/combat/skills"
+
+if [ -d "$TARGET" ]; then
+  echo "combat skills already present, skipping"
+  exit 0
+fi
+
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+
+git clone --depth 1 -q https://github.com/dgriffith/combat-epistemology.git "$TMP/combat-epistemology"
+mkdir -p "$HOME/.claude/skills/combat"
+cp -R "$TMP/combat-epistemology/.claude/skills" "$TARGET"
+echo "combat skills installed at $TARGET"
