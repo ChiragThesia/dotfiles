@@ -12,12 +12,21 @@ set -euo pipefail
 if ! command -v brew >/dev/null 2>&1; then
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+  # Linuxbrew has two possible prefixes depending on whether the installer
+  # could sudo: /home/linuxbrew/.linuxbrew (multi-user, needs sudo) or
+  # $HOME/.linuxbrew (single-user fallback -- what a non-root, no-sudo
+  # Coder/EC2 user actually gets). Missing the second one is what broke this
+  # on a real box: brew bundle worked (found via this same fallback further
+  # down), but a later, separate script process re-derived this from scratch
+  # and needs the same full list.
   if [ -x /opt/homebrew/bin/brew ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
   elif [ -x /usr/local/bin/brew ]; then
     eval "$(/usr/local/bin/brew shellenv)"
   elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  elif [ -x "$HOME/.linuxbrew/bin/brew" ]; then
+    eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
   fi
 fi
 
