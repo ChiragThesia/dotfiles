@@ -5,6 +5,8 @@
 #   2. secret-scans that source tree; a hit stops everything before it leaves
 #   3. ASKS before sending anything to GitHub, then commits and pushes
 #   4. pulls whatever another machine pushed, then applies it here
+#   5. reloads herdr's config, the one running program here that can re-read
+#      it in place (Ghostty/zsh/nvim still need a restart or a new shell)
 #
 # Step 3 always asks. Declining skips the commit and the push; the pull and
 # apply still run, so "no" still gets this machine up to date. Local edits
@@ -122,5 +124,21 @@ fi
 
 echo "==> Applying to this machine"
 chezmoi apply
+
+# chezmoi only writes files; a program already running keeps using the config
+# it read at startup. herdr is the one piece of this setup that can re-read
+# its config in place, so do it here. Guarded on the socket so this is a no-op
+# when herdr isn't running -- and skipped entirely if HERDR_CONFIG_PATH points
+# somewhere else, since then the socket location is not ours to guess.
+HERDR="$HOME/.local/bin/herdr"
+if [ -x "$HERDR" ] && [ -z "${HERDR_CONFIG_PATH:-}" ] && [ -S "$HOME/.config/herdr/herdr.sock" ]; then
+  echo "==> Reloading herdr config"
+  "$HERDR" server reload-config >/dev/null 2>&1 \
+    || echo "    reload failed -- run 'herdr server reload-config' by hand" >&2
+fi
+
+# Ghostty, zsh and nvim have no equivalent: their configs are on disk now,
+# but a running instance needs a restart (Ghostty: Cmd+Shift+, / relaunch;
+# zsh: a new shell; nvim: relaunch) before the change takes effect.
 
 echo "==> dotsync complete"
