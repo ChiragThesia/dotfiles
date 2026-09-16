@@ -12,11 +12,12 @@
 set -euo pipefail
 
 HERDR="$HOME/.local/bin/herdr"
+CLAUDE="$HOME/.local/bin/claude"
 
-claude plugin marketplace add JuliusBrussee/caveman
-claude plugin marketplace add jarrodwatts/claude-hud
+"$CLAUDE" plugin marketplace add JuliusBrussee/caveman
+"$CLAUDE" plugin marketplace add jarrodwatts/claude-hud
 
-claude plugin install caveman@caveman
-claude plugin install claude-hud@claude-hud
+"$CLAUDE" plugin install caveman@caveman
+"$CLAUDE" plugin install claude-hud@claude-hud
 
 "$HERDR" integration install claude

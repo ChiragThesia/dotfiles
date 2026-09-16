@@ -10,6 +10,14 @@ status_indicators = "symbols"
 name = "tokyo-night"
 auto_switch = false
 
+# Force zsh regardless of the box's OS-level $SHELL. On a fresh Linux box
+# (EC2/Coder) the login shell defaults to bash even after Homebrew installs
+# the zsh binary -- without this, panes never source .zshrc/workflow.zsh and
+# the whole zsh-based workflow (aliases, worktrunk shell integration, atuin,
+# tv) silently never runs. No-op on macOS, where $SHELL is already zsh.
+[terminal]
+default_shell = "zsh"
+
 # Sidebar already groups by workspace/tab visually -- repeating them plus the
 # literal "claude" agent-type string was just noise. One row: status + the
 # real task title Claude Code itself sets (terminal_title_stripped).
