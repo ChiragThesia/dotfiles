@@ -4,6 +4,23 @@
 
 export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
 
+# Homebrew's NONINTERACTIVE=1 install (run_once_before_00-brew.sh.tmpl) skips
+# the step where it would normally tell you to add this to your shell
+# profile -- without it, a brand new shell (this one) never finds brew,
+# even though every one-shot setup script resolved it fine internally via
+# its own absolute-path check.
+if ! command -v brew >/dev/null 2>&1; then
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  elif [ -x "$HOME/.linuxbrew/bin/brew" ]; then
+    eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
+  fi
+fi
+
 # Personal tool managers/editors -- kept as guarded/inert entries rather than
 # installed by this repo (nvm/pnpm/IntelliJ are outside its stated scope);
 # each is a no-op if the tool in question isn't present.
