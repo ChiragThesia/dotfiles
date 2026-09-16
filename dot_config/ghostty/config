@@ -1,0 +1,32 @@
+# Ghostty Configuration
+
+# Let these Cmd keys reach Herdr and Neovim instead of Ghostty.
+# super+t/w/k -> Herdr new_tab / close_tab / goto  (see ~/.config/herdr/config.toml [keys])
+# super+e     -> Neovim <D-e> focus explorer      (see ~/.config/nvim/lua/config/keymaps.lua)
+# super+d/shift+d -> Herdr split_vertical/split_horizontal, not Ghostty's own
+# native new_split (a separate untracked terminal surface, same problem as
+# cmd+t grabbing a Ghostty tab instead of a Herdr one).
+# super+shift+w -> Herdr close_tab, not Ghostty's own close_window.
+keybind = super+t=unbind
+keybind = super+w=unbind
+keybind = super+k=unbind
+keybind = super+e=unbind
+keybind = super+shift+g=unbind
+keybind = super+d=unbind
+keybind = super+shift+d=unbind
+keybind = super+shift+w=unbind
+
+# Left Option acts as Alt so herdr's alt+hjkl pane focus works.
+# Right Option still composes special characters.
+macos-option-as-alt = left
+
+# Look and feel. Theme matches herdr's theme.name = "tokyo-night" and nvim's
+# tokyonight-night; nvim runs transparent, so this background is what shows
+# through the editor.
+theme = TokyoNight Night
+font-size = 14
+window-padding-x = 10
+window-padding-y = 8
+cursor-style = bar
+cursor-style-blink = false
+scrollback-limit = 100000

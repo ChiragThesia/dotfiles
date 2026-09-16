@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# herdr-move-pane-to-tab: fzf-pick a tab in the current workspace, move the
+# current pane into it as a right-hand split. Wraps `herdr pane move`
+# (herdr pane move --help) so you don't hand-type pane/tab IDs.
+set -euo pipefail
+
+if ! command -v fzf >/dev/null; then
+  printf '\033[31m%s\033[0m\n' "fzf not found on PATH"
+  sleep 2
+  exit 1
+fi
+
+herdr=${HERDR_BIN_PATH:-herdr}
+
+CURRENT=$("$herdr" pane current 2>/dev/null)
+PANE_ID=$(printf '%s' "$CURRENT" | jq -r '.result.pane.pane_id // empty')
+TAB_ID=$(printf '%s' "$CURRENT" | jq -r '.result.pane.tab_id // empty')
+WORKSPACE_ID=$(printf '%s' "$CURRENT" | jq -r '.result.pane.workspace_id // empty')
+
+if [ -z "$PANE_ID" ] || [ -z "$WORKSPACE_ID" ]; then
+  printf '\033[31m%s\033[0m\n' "could not resolve current pane"
+  sleep 2
+  exit 1
+fi
+
+CHOICE=$("$herdr" tab list --workspace "$WORKSPACE_ID" 2>/dev/null \
+  | jq -r --arg cur "$TAB_ID" '
+      .result.tabs[]
+      | select(.tab_id != $cur)
+      | "\(.tab_id)\t#\(.number) \(.label) (\(.pane_count) pane\(if .pane_count == 1 then "" else "s" end))"
+    ' \
+  | fzf --with-nth=2.. --delimiter='\t' --height=40% --layout=reverse --border --cycle \
+        --prompt="move pane to tab > " \
+        --header="enter: move here as a right-hand split · esc: cancel")
+
+if [ -z "$CHOICE" ]; then
+  exit 0
+fi
+TARGET_TAB=$(printf '%s' "$CHOICE" | cut -f1)
+
+# `pane move --tab` needs an existing pane in the target tab to split
+# against; grab whichever one happens to be there.
+TARGET_PANE=$("$herdr" pane list 2>/dev/null \
+  | jq -r --arg t "$TARGET_TAB" '.result.panes[] | select(.tab_id == $t) | .pane_id' \
+  | head -1)
+
+if [ -z "$TARGET_PANE" ]; then
+  printf '\033[31m%s\033[0m\n' "target tab has no panes"
+  sleep 2
+  exit 1
+fi
+
+"$herdr" pane move "$PANE_ID" --tab "$TARGET_TAB" --split right --target-pane "$TARGET_PANE" --focus

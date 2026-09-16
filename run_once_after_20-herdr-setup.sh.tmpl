@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# herdr's config.toml (already placed on disk by chezmoi's main apply pass,
+# before this script runs) references the worktrunk plugin's actions --
+# install it, then validate the config parses. Only ever one-shot CLI
+# subcommands here, never bare `herdr` (which launches the interactive TUI
+# and would hang a non-interactive apply).
+set -euo pipefail
+
+HERDR="$HOME/.local/bin/herdr"
+
+"$HERDR" plugin install devashish2203/herdr-worktrunk --yes
+"$HERDR" config check

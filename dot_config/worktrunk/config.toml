@@ -1,0 +1,16 @@
+# Fires before branch resolution/worktree creation, for every entry point
+# (herdr's worktrunk keys, plain wt switch). Without this, --create bases
+# off whatever origin/<default> already points to locally, which can be
+# stale.
+[pre-switch]
+fetch = "git fetch origin --quiet"
+
+# No [post-start] here: the original had `open = "open-wt-session ..."` and
+# `deps = "... codegraph sync ..."`. Both are excluded from this repo --
+# open-wt-session is wired to SN-specific gh-dash repos/logins, and
+# codegraph is an SN-internal tool. Shipping either would error on every
+# worktree creation on a machine that doesn't have them. Add your own
+# [post-start] here if you want an equivalent for wherever you're running
+# this -- see herdr's worktrunk plugin (`` ` ``+shift+G in herdr) for how
+# worktrunk worktrees register as herdr workspaces without needing this
+# hook at all.

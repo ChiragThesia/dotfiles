@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Installs everything brew-installable in this workflow. herdr itself is not
+# on Homebrew (see run_once_after_10) -- everything else is.
+set -euo pipefail
+
+if ! command -v brew >/dev/null 2>&1; then
+  echo "Homebrew not found. Install it first: https://brew.sh" >&2
+  exit 1
+fi
+
+brew bundle --file="{{ .chezmoi.sourceDir }}/Brewfile"

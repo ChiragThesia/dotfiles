@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Merges a curated settings patch into ~/.claude/settings.json. Deliberately
+# a MERGE, not an overwrite: this file commonly already has real, personal
+# content on any machine that already uses Claude Code, and this patch is
+# hand-authored from scratch -- it is never derived from a real settings.json
+# (which on the source machine also carries a live credential in
+# env.INTERNAL_INSTANCES that must never leave that machine).
+#
+# enabledPlugins / extraKnownMarketplaces are plain objects, so a `*` merge
+# unions keys without disturbing anything already there. permissions.ask/deny
+# and hooks.PostToolUse are arrays, which `*` would replace outright, so
+# those are concatenated and deduplicated by hand instead.
+set -euo pipefail
+
+SETTINGS="$HOME/.claude/settings.json"
+PATCH="{{ .chezmoi.sourceDir }}/claude-settings-patch.json"
+
+mkdir -p "$HOME/.claude"
+[ -f "$SETTINGS" ] || echo '{}' > "$SETTINGS"
+
+jq -s '
+  .[0] as $cur | .[1] as $new |
+  ($cur * $new) as $merged |
+  $merged
+  | .permissions.deny = (($cur.permissions.deny // []) + ($new.permissions.deny // []) | unique)
+  | .permissions.ask  = (($cur.permissions.ask  // []) + ($new.permissions.ask  // []) | unique)
+  | .hooks.PostToolUse = (($cur.hooks.PostToolUse // []) + ($new.hooks.PostToolUse // []) | unique)
+' "$SETTINGS" "$PATCH" > "$SETTINGS.tmp"
+
+mv "$SETTINGS.tmp" "$SETTINGS"
+jq . "$SETTINGS" > /dev/null && echo "settings.json merged and valid"
