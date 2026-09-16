@@ -3,14 +3,33 @@
 #
 #   1. pulls local edits to managed files back into the chezmoi source repo
 #   2. secret-scans that source tree; a hit stops everything before it leaves
-#   3. commits and pushes to GitHub
+#   3. ASKS before sending anything to GitHub, then commits and pushes
 #   4. pulls whatever another machine pushed, then applies it here
 #
-# Usage: dotsync ["commit message"]
+# Step 3 always asks. Declining skips the commit and the push; the pull and
+# apply still run, so "no" still gets this machine up to date. Local edits
+# stay in the source repo, uncommitted, waiting for the next run.
+#
+# Usage: dotsync [-y|--yes] [-n|--no-push] ["commit message"]
+#   -y  push without asking (for scripts and non-interactive runs)
+#   -n  never push this run; just pull and apply
 set -euo pipefail
 
 SRC="$(chezmoi source-path)"
-MSG="${1:-dotsync from $(hostname -s) on $(date +%Y-%m-%d)}"
+MODE=ask
+MSG=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -y|--yes)     MODE=yes ;;
+    -n|--no-push) MODE=no ;;
+    -h|--help)    sed -n '2,15p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -*)           echo "dotsync: unknown option $1" >&2; exit 2 ;;
+    *)            MSG="$1" ;;
+  esac
+  shift
+done
+MSG="${MSG:-dotsync from $(hostname -s) on $(date +%Y-%m-%d)}"
 
 # `git push` over an https remote hangs on a macOS Keychain dialog that a
 # non-interactive session can never approve, so an https remote is pushed
@@ -48,22 +67,58 @@ if rg -n --glob '!.git' \
   exit 1
 fi
 
-if [ -n "$(git -C "$SRC" status --porcelain)" ]; then
-  echo "==> Committing local changes"
+# Everything that would leave this machine: uncommitted edits, plus any
+# commits made on an earlier run that never got pushed.
+DIRTY="$(git -C "$SRC" status --porcelain)"
+UNPUSHED="$(git -C "$SRC" log --oneline @{u}..HEAD 2>/dev/null || true)"
+
+PUSH=no
+if [ -z "$DIRTY" ] && [ -z "$UNPUSHED" ]; then
+  echo "==> Nothing local to send"
+else
+  echo "==> Local changes not yet on GitHub:"
+  [ -n "$DIRTY" ] && git -C "$SRC" status --short | sed 's/^/    /'
+  [ -n "$UNPUSHED" ] && echo "$UNPUSHED" | sed 's/^/    unpushed commit: /'
+
+  case "$MODE" in
+    yes) PUSH=yes ;;
+    no)  echo "    (-n given, skipping)" ;;
+    ask)
+      if [ -t 0 ]; then
+        while true; do
+          printf 'Send these to GitHub? [y]es / [n]o / [d]iff: '
+          read -r reply </dev/tty
+          case "$reply" in
+            [Yy]*) PUSH=yes; break ;;
+            [Dd]*) git -C "$SRC" --no-pager diff; git -C "$SRC" --no-pager diff --cached ;;
+            *)     echo "    skipped -- run 'dotsync' again, or 'dotsync -y', when ready"; break ;;
+          esac
+        done
+      else
+        echo "    no terminal to ask on, skipping -- use 'dotsync -y' to push non-interactively"
+      fi
+      ;;
+  esac
+fi
+
+if [ "$PUSH" = yes ] && [ -n "$DIRTY" ]; then
+  echo "==> Committing"
   git -C "$SRC" add -A
   git -C "$SRC" commit -q -m "$MSG"
-else
-  echo "==> No local changes to commit"
 fi
 
 echo "==> Pulling from GitHub"
 git_net pull --rebase --autostash || {
-  echo "dotsync: rebase stopped. Resolve in $SRC, 'git rebase --continue', then re-run dotsync." >&2
+  echo "dotsync: pull stopped, most likely a conflict. Resolve it in $SRC" >&2
+  echo "         ('git status' there will say whether it's a rebase or a stash pop)," >&2
+  echo "         then re-run dotsync." >&2
   exit 1
 }
 
-echo "==> Pushing to GitHub"
-git_net push
+if [ "$PUSH" = yes ]; then
+  echo "==> Pushing to GitHub"
+  git_net push
+fi
 
 echo "==> Applying to this machine"
 chezmoi apply
