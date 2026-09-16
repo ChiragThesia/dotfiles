@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
+  "name": "combat",
+  "version": "1.0.0",
+  "description": "Rationalist cognitive techniques operationalized as composable skills: pre-mortem planning, crux finding, goal decomposition, semantic decompression, base-rate anchoring.",
+  "author": {
+    "name": "dgriffith"
+  },
+  "homepage": "https://github.com/dgriffith/combat-epistemology",
+  "license": "CC-BY-4.0",
+  "keywords": [
+    "rationality",
+    "planning",
+    "decision-making",
+    "cfar",
+    "epistemics"
+  ],
+  "skills": [
+    "./skills"
+  ]
+}

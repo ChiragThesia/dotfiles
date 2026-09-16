@@ -53,7 +53,13 @@ installs the `caveman` and `claude-hud` Claude Code plugins fresh.
 - **Claude Code** — `~/.claude/CLAUDE.md` copied as-is; a curated subset of
   `~/.claude/settings.json` **merged** (not overwritten) into whatever's already
   there; `caveman` and `claude-hud` plugins installed fresh from their own
-  marketplaces; herdr's own `claude` integration (agent lifecycle → herdr's sidebar).
+  marketplaces; herdr's own `claude` integration (agent lifecycle → herdr's sidebar);
+  `claude-hud`'s own `config.json` (display/layout preferences, not just cache);
+  `combat` (rationalist-skills toolkit, `combat:murphyjitsu` etc.) — not tracked by
+  Claude Code's plugin system at all, so its content is cloned fresh from
+  [dgriffith/combat-epistemology](https://github.com/dgriffith/combat-epistemology)
+  on apply, with only its `.claude-plugin/plugin.json` manifest (which upstream
+  doesn't ship) carried in this repo.
 
 ## Deliberately not here
 
