@@ -14,7 +14,7 @@ auto_switch = false
 # literal "claude" agent-type string was just noise. One row: status + the
 # real task title Claude Code itself sets (terminal_title_stripped).
 [ui.sidebar.agents.rows_by_agent]
-claude = [["state_icon", "tab"], ["terminal_title_stripped"]]
+claude = [["state_icon", { token = "tab", dim = false, bold = true, fg = "#c0caf5" }], ["terminal_title_stripped"]]
 
 # [worktrees] left unset -- herdr's own native worktree creation (right-click
 # a workspace, alt+shift+g -> new_worktree) stays on its default location
