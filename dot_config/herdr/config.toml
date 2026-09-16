@@ -124,7 +124,7 @@ description = "Swap pane right"
 [[keys.command]]
 key = "prefix+f"
 type = "shell"
-command = "herdr agent list | jq -r '[.result.agents[] | select(.agent_status==\"idle\" or .agent_status==\"done\")] | sort_by(.state_change_seq) | last // {} | .pane_id // empty' | xargs -I{} herdr agent focus {}"
+command = "herdr agent list | jq -r '[.result.agents[] | select((.agent_status==\"idle\" or .agent_status==\"done\") and .focused==false)] | sort_by(.state_change_seq) | last // {} | .pane_id // empty' | xargs -I{} herdr agent focus {}"
 description = "Focus most recently finished agent"
 
 # Lazygit over the focused pane. q closes it.

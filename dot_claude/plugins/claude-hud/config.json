@@ -20,7 +20,6 @@
     "showSessionTokens": true,
     "showSpeed": true,
     "showUsage": true,
-    "usageCompact": true,
-    "customLine": "caveman: ultra"
+    "usageCompact": true
   }
 }
