@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Wires the workflow snippet into ~/.zshrc without touching anything else in
+# it -- .zshrc commonly already has real, personal content on any machine
+# this runs on, so this only appends a source line, once, idempotently.
+set -euo pipefail
+
+MARKER="# dotfiles: herdr/ghostty workflow"
+LINE='[ -f "$HOME/.config/zsh/workflow.zsh" ] && source "$HOME/.config/zsh/workflow.zsh"'
+ZSHRC="$HOME/.zshrc"
+
+touch "$ZSHRC"
+if ! grep -qF "$MARKER" "$ZSHRC"; then
+  printf '\n%s\n%s\n' "$MARKER" "$LINE" >> "$ZSHRC"
+  echo "Added workflow.zsh source line to $ZSHRC"
+else
+  echo "workflow.zsh already sourced in $ZSHRC, skipping"
+fi

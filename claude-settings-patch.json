@@ -1,0 +1,63 @@
+{
+  "model": "sonnet",
+  "outputStyle": "default",
+  "effortLevel": "xhigh",
+  "modelSettings": {
+    "claude-opus-5": { "effortLevel": "xhigh" }
+  },
+  "askUserQuestionTimeout": "never",
+  "tui": "fullscreen",
+  "voice": { "enabled": true, "mode": "hold" },
+  "voiceEnabled": true,
+  "timeFormat": "auto",
+  "skipWorkflowUsageWarning": true,
+  "theme": "auto",
+  "editorMode": "vim",
+  "verbose": false,
+  "preferredNotifChannel": "auto",
+  "switchModelsOnFlag": true,
+  "teammateMode": "tmux",
+  "remoteControlAtStartup": false,
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "skipAutoPermissionPrompt": true,
+  "worktree": { "baseRef": "head" },
+  "statusLine": {
+    "type": "command",
+    "command": "bash -c 'cols=$(stty size </dev/tty 2>/dev/null | awk '\"'\"'{print $2}'\"'\"'); export COLUMNS=$(( ${cols:-120} > 4 ? ${cols:-120} - 4 : 1 )); plugin_dir=$(ls -d \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}\"/plugins/cache/*/claude-hud/*/ 2>/dev/null | awk -F/ '\"'\"'{ print $(NF-1) \"\\t\" $(0) }'\"'\"' | grep -E '\"'\"'^[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]'\"'\"' | sort -t. -k1,1n -k2,2n -k3,3n -k4,4n | tail -1 | cut -f2-); exec \"/opt/homebrew/bin/bun\" --env-file /dev/null \"${plugin_dir}src/index.ts\"'"
+  },
+  "permissions": {
+    "deny": ["Bash(rm -rf /)", "Bash(git push --force *)"],
+    "ask": ["Bash(git push --force *)", "Bash(git reset --hard *)", "Bash(git clean -f *)", "Bash(git branch -D *)", "Bash(git rebase *)"],
+    "defaultMode": "auto"
+  },
+  "enabledPlugins": {
+    "claude-hud@claude-hud": true,
+    "caveman@caveman": true,
+    "playground@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "claude-md-management@claude-plugins-official": true,
+    "commit-commands@claude-plugins-official": true,
+    "lua-lsp@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "ralph-loop@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "claude-hud": { "source": { "source": "github", "repo": "jarrodwatts/claude-hud" } },
+    "caveman": { "source": { "source": "github", "repo": "JuliusBrussee/caveman" } }
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_FILE_PATH\" == *.ts || \"$CLAUDE_TOOL_FILE_PATH\" == *.jsx || \"$CLAUDE_TOOL_FILE_PATH\" == *.tsx ]]; then npx eslint \"$CLAUDE_TOOL_FILE_PATH\" --fix 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then pylint \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.rb ]]; then rubocop \"$CLAUDE_TOOL_FILE_PATH\" --auto-correct 2>/dev/null || true; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

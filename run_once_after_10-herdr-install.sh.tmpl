@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# herdr isn't on Homebrew -- it ships its own installer. Runs before anything
+# else that shells out to `herdr`, and every later script calls it by full
+# path rather than relying on this same process's PATH picking up
+# ~/.local/bin (a fresh shell hasn't sourced .zshrc yet at this point).
+set -euo pipefail
+
+HERDR_BIN="$HOME/.local/bin/herdr"
+
+if [ -x "$HERDR_BIN" ]; then
+  echo "herdr already installed, skipping"
+  exit 0
+fi
+
+curl -fsSL https://herdr.dev/install.sh | sh
+
+if [ ! -x "$HERDR_BIN" ]; then
+  echo "herdr install did not produce $HERDR_BIN -- check https://herdr.dev/docs/install/" >&2
+  exit 1
+fi
+
+"$HERDR_BIN" --version

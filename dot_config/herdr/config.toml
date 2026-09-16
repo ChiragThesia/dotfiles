@@ -1,0 +1,164 @@
+onboarding = false
+
+[ui.toast]
+delivery = "system"
+
+[ui]
+status_indicators = "symbols"
+
+[theme]
+name = "tokyo-night"
+auto_switch = false
+
+# [worktrees] left unset -- herdr's own native worktree creation (right-click
+# a workspace, alt+shift+g -> new_worktree) stays on its default location
+# (~/.herdr/worktrees), separate from worktrunk's convention
+# (~/Desktop/sn-dev/dcg/wt/<branch>/<repo>, see ~/.config/worktrunk/config.toml).
+
+
+[keys]
+# Dave's layout. prefix is the fallback only; everything frequent is a direct chord.
+# "§" in the upstream docs is an ISO-layout key that does not exist on US ANSI
+# (this machine: com.apple.keylayout.US). Backtick sits in the same physical slot
+# on ANSI, so it is the closest translation of Dave's choice.
+prefix = "backtick"
+new_tab = ["prefix+c", "cmd+t"]
+close_tab = ["prefix+shift+x", "cmd+shift+w"]
+close_pane = ["prefix+x", "cmd+w"]
+goto = ["prefix+g", "cmd+k"]
+
+# Vim-style pane focus. alt+ rather than ctrl+ because LazyVim binds
+# <C-h/j/k/l> to nvim's own window navigation (neo-tree <-> editor).
+# Needs macos-option-as-alt in ~/.config/ghostty/config.
+focus_pane_left = ["prefix+h", "alt+h"]
+focus_pane_down = ["prefix+j", "alt+j"]
+focus_pane_up = ["prefix+k", "alt+k"]
+focus_pane_right = ["prefix+l", "alt+l"]
+previous_tab = ["prefix+p", "ctrl+left"]
+next_tab = ["prefix+n", "ctrl+right"]
+# alt+hjkl above = "in there" (move between panes). alt+shift+hjkl below =
+# "across" (jump between workspaces/agents). h/l -> agent prev/next (vim's
+# left=back, right=forward); j/k -> workspace next/prev (vertical, matches
+# Dave's original ctrl+up/down metaphor, and gives a working chord since
+# ctrl+up/down is still dead -- Mission Control owns it, unresolved).
+previous_workspace = ["ctrl+up", "alt+shift+k"]
+next_workspace = ["ctrl+down", "alt+shift+j"]
+cycle_pane_next = ["prefix+tab", "alt+up"]
+cycle_pane_previous = ["prefix+shift+tab", "alt+down"]
+
+# vertical = side-by-side (left|right), horizontal = stacked (top|bottom) --
+# standard vim/terminal-app convention, matching what these same keys already
+# did as Ghostty's own native split (new_split:right / new_split:down) before
+# we unbound them in ~/.config/ghostty/config. Not alt+d for vertical:
+# readline claims it as kill-word (\ed), a common one, same class of mistake
+# as alt+b earlier.
+split_vertical = ["prefix+v", "cmd+d"]
+split_horizontal = ["prefix+minus", "cmd+shift+d"]
+
+# Agent navigation (unset by herdr's own defaults -- never touched before now).
+# focus_agent's indexed form is behind the prefix, so the alt+b readline
+# problem doesn't apply -- prefix mode claims the next keystroke itself
+# before any pane/CLI ever sees it.
+previous_agent = "alt+shift+h"
+next_agent = "alt+shift+l"
+focus_agent = "prefix+alt+1..9"
+
+# Reorder the current tab's position (distinct from previous_tab/next_tab
+# above, which just switch focus). Same alt+shift+ family as agent nav.
+move_tab_previous = "alt+shift+left"
+move_tab_next = "alt+shift+right"
+
+# herdr's own native worktree-creation modal -- the same one right-clicking
+# a workspace opens. Its default chord (prefix+shift+g) is what we gave to
+# the worktrunk plugin above instead, so this got orphaned; giving it its
+# own chord back. Distinct from `` ` ``+shift+G (worktrunk's fzf/wt flow,
+# post-start hooks, deps sync) -- this is the plain built-in form.
+new_worktree = "alt+shift+g"
+
+# Swap the focused pane with its left/right neighbor -- native `pane swap`,
+# no plugin needed. Same h/l = left/right axis as focus_pane_left/right
+# above, prefix+shift so it stays distinct from that and carries no readline
+# risk (prefix mode claims the next key itself, same reasoning as prefix+f
+# below).
+[[keys.command]]
+key = "prefix+shift+h"
+type = "shell"
+command = "herdr pane swap --direction left --current"
+description = "Swap pane left"
+
+[[keys.command]]
+key = "prefix+shift+l"
+type = "shell"
+command = "herdr pane swap --direction right --current"
+description = "Swap pane right"
+
+# Jump to whichever agent most recently finished. Matches "idle" or "done"
+# (herdr's own `agent wait` groups both as "not actively working"), not
+# "blocked" (that means stuck needing input, not finished). Picked by
+# state_change_seq (bumps on every status change, so highest = most
+# recent). No built-in action for this -- herdr only has prev/next/
+# indexed agent focus -- so this drives `agent focus` by hand. type="shell"
+# fits: no display needed, just a one-shot query-then-focus. If nothing
+# is idle/done right now, jq prints nothing and xargs is a safe no-op.
+[[keys.command]]
+key = "prefix+f"
+type = "shell"
+command = "herdr agent list | jq -r '[.result.agents[] | select(.agent_status==\"idle\" or .agent_status==\"done\")] | sort_by(.state_change_seq) | last // {} | .pane_id // empty' | xargs -I{} herdr agent focus {}"
+description = "Focus most recently finished agent"
+
+# Lazygit over the focused pane. q closes it.
+[[keys.command]]
+key = ["cmd+shift+g", "prefix+d"]
+type = "popup"
+command = "cd \"${HERDR_ACTIVE_PANE_CWD:-.}\" && exec lazygit"
+description = "Git status"
+width = "90%"
+height = "85%"
+
+# worktrunk plugin. Supersedes the built-in new_worktree (same chord) so worktree
+# creation goes through wt and its post-start hooks instead of herdr's own.
+# Remove is deliberately unbound: prefix+shift+d is close_workspace, and clobbering
+# that for a rare destructive action is a bad trade. Invoke it from the palette.
+[[keys.command]]
+key = "prefix+shift+g"
+type = "plugin_action"
+command = "worktrunk.open"
+description = "Worktree: switch / create from default branch"
+
+[[keys.command]]
+key = "prefix+shift+b"
+type = "plugin_action"
+command = "worktrunk.open-with-remotes"
+description = "Worktree: switch / create from local or remote branches"
+
+[[keys.command]]
+key = "prefix+shift+m"
+type = "plugin_action"
+command = "worktrunk.merge"
+description = "Worktree: merge into the target branch"
+
+# Browser pane via terminal-browser (github.com/zenbu-labs/terminal-browser).
+# Not a herdr plugin: a standalone Kitty-graphics binary launched as a plain
+# split, same mechanism as the lazygit popup above. Needs left-Option = Alt,
+# already set via macos-option-as-alt = left in ~/.config/ghostty/config.
+[[keys.command]]
+key = "alt+b"
+type = "pane"
+command = "terminal-browser"
+description = "Browser pane"
+
+# fzf-pick a tab, move the current pane into it as a split -- no native
+# action for this (checked --default-config), so it's our own script
+# (~/bin/herdr-move-pane-to-tab) wrapping `herdr pane move`. popup, not
+# pane/shell: needs a real interactive picker in front of you, and should
+# vanish afterward rather than leave a pane behind.
+[[keys.command]]
+key = "prefix+shift+s"
+type = "popup"
+command = "herdr-move-pane-to-tab"
+description = "Move pane to tab"
+width = "50%"
+height = "40%"
+
+[experimental]
+kitty_graphics = true

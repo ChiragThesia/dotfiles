@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# caveman and claude-hud are installed fresh via their own marketplaces here
+# rather than copying their generated hook commands from settings.json --
+# those hardcode this machine's nvm node version path and would break
+# outright on a different one. Runs after the settings merge (30) so it
+# edits a file that already has our content, and after the merge sets
+# enabledPlugins, which install alone doesn't touch.
+#
+# herdr integration install claude adds the SessionStart hook that reports
+# agent lifecycle state to herdr's sidebar -- runs last, once herdr,
+# worktrunk, and settings.json are all already in place.
+set -euo pipefail
+
+HERDR="$HOME/.local/bin/herdr"
+
+claude plugin marketplace add JuliusBrussee/caveman
+claude plugin marketplace add jarrodwatts/claude-hud
+
+claude plugin install caveman@caveman
+claude plugin install claude-hud@claude-hud
+
+"$HERDR" integration install claude
