@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Claude Code itself, via the official native installer (not npm -- same
+# rationale as herdr in run_once_after_10: a standalone binary, no Node
+# dependency). run_once_after_40 calls the `claude` CLI directly to install
+# plugins, so it has to exist by then. Full path everywhere, same reason as
+# herdr: a fresh non-interactive shell hasn't sourced .zshrc/PATH yet.
+set -euo pipefail
+
+CLAUDE_BIN="$HOME/.local/bin/claude"
+
+if [ -x "$CLAUDE_BIN" ]; then
+  echo "claude already installed, skipping"
+else
+  curl -fsSL https://claude.ai/install.sh | bash
+fi
+
+if [ ! -x "$CLAUDE_BIN" ]; then
+  echo "claude install did not produce $CLAUDE_BIN -- check https://code.claude.com/docs/en/setup" >&2
+  exit 1
+fi
+
+"$CLAUDE_BIN" --version
