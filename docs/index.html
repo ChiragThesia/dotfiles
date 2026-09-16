@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>herdr + Ghostty + nvim — keybinding reference</title>
+<style>
+  :root {
+    --bg:        #16161e;
+    --bg-soft:   #1a1b26;
+    --bg-code:   #1f2335;
+    --border:    #292e42;
+    --fg:        #c0caf5;
+    --fg-dim:    #9aa5ce;
+    --fg-faint:  #565f89;
+    --accent:    #7aa2f7;
+    --accent-2:  #bb9af7;
+    --green:     #9ece6a;
+    --orange:    #ff9e64;
+    --red:       #f7768e;
+    --sidebar-w: 16rem;
+    --toc-w:     14rem;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 1.5rem; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { font-family: var(--mono); font-size: 0.87em; }
+
+  /* ---------- layout ---------- */
+  .shell { display: flex; align-items: flex-start; }
+
+  .sidebar {
+    width: var(--sidebar-w);
+    flex: 0 0 var(--sidebar-w);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 1.75rem 1rem 3rem 1.5rem;
+    border-right: 1px solid var(--border);
+    background: var(--bg-soft);
+  }
+  .brand { font-weight: 650; font-size: 0.95rem; letter-spacing: -0.01em; margin-bottom: 0.2rem; }
+  .brand-sub { color: var(--fg-faint); font-size: 0.78rem; margin-bottom: 1.5rem; }
+  .nav-group { margin-bottom: 1.15rem; }
+  .nav-label {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.09em;
+    color: var(--fg-faint); font-weight: 650; margin-bottom: 0.4rem;
+  }
+  .sidebar a {
+    display: block; padding: 0.24rem 0.5rem; margin-left: -0.5rem;
+    border-radius: 5px; color: var(--fg-dim); font-size: 0.875rem;
+  }
+  .sidebar a:hover { background: var(--bg-code); color: var(--fg); text-decoration: none; }
+
+  main {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: 52rem;
+    padding: 2.75rem 2.5rem 6rem;
+  }
+
+  .toc {
+    width: var(--toc-w);
+    flex: 0 0 var(--toc-w);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 2.9rem 1.5rem 3rem 0.5rem;
+    font-size: 0.8rem;
+  }
+  .toc .nav-label { margin-bottom: 0.55rem; }
+  .toc a { display: block; padding: 0.18rem 0; color: var(--fg-faint); }
+  .toc a:hover { color: var(--fg); text-decoration: none; }
+
+  /* ---------- typography ---------- */
+  h1 {
+    font-size: 2.05rem; line-height: 1.15; letter-spacing: -0.025em;
+    margin: 0 0 0.6rem; font-weight: 680;
+  }
+  .lede { color: var(--fg-dim); font-size: 1.02rem; margin: 0 0 2.25rem; }
+  h2 {
+    font-size: 1.32rem; letter-spacing: -0.015em; margin: 3.25rem 0 0.4rem;
+    padding-top: 1.75rem; border-top: 1px solid var(--border); font-weight: 650;
+  }
+  h2:first-of-type { border-top: none; padding-top: 0; margin-top: 2rem; }
+  h3 { font-size: 1.02rem; margin: 2rem 0 0.5rem; font-weight: 650; color: var(--fg); }
+  h4 { font-size: 0.9rem; margin: 1.5rem 0 0.4rem; font-weight: 650; color: var(--fg-dim); }
+  p { margin: 0.7rem 0; }
+  ul, ol { padding-left: 1.3rem; }
+  li { margin: 0.3rem 0; }
+  .muted { color: var(--fg-dim); }
+
+  /* ---------- kbd ---------- */
+  kbd {
+    display: inline-block;
+    font-family: var(--mono); font-size: 0.76rem; line-height: 1.5;
+    padding: 0.08rem 0.42rem;
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    color: var(--fg);
+    white-space: nowrap;
+  }
+  .sep { color: var(--fg-faint); padding: 0 0.15rem; font-size: 0.78rem; }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; margin: 0.9rem 0 1.1rem; }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+  th, td { text-align: left; padding: 0.5rem 0.85rem 0.5rem 0; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th {
+    font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--fg-faint); font-weight: 650; border-bottom-color: var(--fg-faint);
+  }
+  td:first-child { white-space: nowrap; padding-right: 1.5rem; }
+  tbody tr:last-child td { border-bottom: none; }
+  td .why { display: block; color: var(--fg-faint); font-size: 0.83rem; margin-top: 0.15rem; }
+
+  /* ---------- code ---------- */
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1.05rem;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 0.815rem;
+    line-height: 1.6;
+    margin: 0.9rem 0;
+  }
+  pre .c { color: var(--fg-faint); }
+  pre .k { color: var(--accent-2); }
+  pre .s { color: var(--green); }
+  p code, li code, td code {
+    background: var(--bg-code); border: 1px solid var(--border);
+    border-radius: 4px; padding: 0.05rem 0.32rem;
+  }
+  .filepath {
+    font-family: var(--mono); font-size: 0.78rem; color: var(--fg-faint);
+    margin: 1.4rem 0 -0.5rem;
+  }
+
+  /* ---------- callouts ---------- */
+  .note {
+    border-left: 3px solid var(--accent);
+    background: rgba(122,162,247,0.06);
+    padding: 0.75rem 1rem; border-radius: 0 6px 6px 0; margin: 1.1rem 0;
+    font-size: 0.89rem;
+  }
+  .note.warn { border-left-color: var(--orange); background: rgba(255,158,100,0.06); }
+  .note.danger { border-left-color: var(--red); background: rgba(247,118,142,0.06); }
+  .note strong { color: var(--fg); }
+
+  .pill {
+    display: inline-block; font-size: 0.68rem; letter-spacing: 0.04em;
+    text-transform: uppercase; font-weight: 650;
+    padding: 0.1rem 0.45rem; border-radius: 4px; vertical-align: 2px;
+    background: var(--bg-code); color: var(--fg-faint); border: 1px solid var(--border);
+    margin-left: 0.5rem;
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1180px) {
+    .toc { display: none; }
+  }
+  @media (max-width: 860px) {
+    .shell { display: block; }
+    .sidebar {
+      position: static; width: auto; height: auto; flex: none;
+      border-right: none; border-bottom: 1px solid var(--border);
+      padding: 1.25rem 1.25rem 1.5rem;
+    }
+    .sidebar nav { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; }
+    .nav-group { margin-bottom: 0.5rem; }
+    main { padding: 1.75rem 1.25rem 4rem; max-width: none; }
+    h1 { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <aside class="sidebar">
+    <div class="brand">herdr · Ghostty · nvim</div>
+    <div class="brand-sub">keybinding &amp; config reference</div>
+    <nav>
+      <div class="nav-group">
+        <div class="nav-label">Getting started</div>
+        <a href="#overview">Overview</a>
+        <a href="#install">Install</a>
+        <a href="#layers">How the layers fit</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Terminal</div>
+        <a href="#ghostty">Ghostty</a>
+        <a href="#herdr">herdr</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Editor</div>
+        <a href="#neovim">Neovim</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Shell &amp; git</div>
+        <a href="#shell">zsh</a>
+        <a href="#worktrunk">worktrunk</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Agents</div>
+        <a href="#claude">Claude Code</a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-label">Maintenance</div>
+        <a href="#dotsync">dotsync</a>
+        <a href="#notes">Design notes</a>
+      </div>
+    </nav>
+  </aside>
+
+  <main>
+    <h1>herdr + Ghostty + nvim</h1>
+    <p class="lede">
+      Every keybinding and deliberate modification in this setup, and why each one is
+      what it is. macOS only — Ghostty.app, Homebrew and Option-key remapping are
+      load-bearing throughout.
+    </p>
+
+    <h2 id="overview">Overview</h2>
+    <p>
+      Three programs stacked on top of each other, each one deliberately giving up keys
+      to the layer above it:
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Layer</th><th>Role</th><th>Config</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Ghostty</strong></td><td>the terminal window</td><td><code>~/.config/ghostty/config</code></td></tr>
+          <tr><td><strong>herdr</strong></td><td>tabs, panes, workspaces, agent sidebar</td><td><code>~/.config/herdr/config.toml</code></td></tr>
+          <tr><td><strong>Neovim</strong></td><td>editor, LazyVim-based</td><td><code>~/.config/nvim/</code></td></tr>
+          <tr><td><strong>zsh</strong></td><td>shell, tool integrations, aliases</td><td><code>~/.config/zsh/workflow.zsh</code></td></tr>
+          <tr><td><strong>worktrunk</strong></td><td>git worktree manager (<code>wt</code>)</td><td><code>~/.config/worktrunk/config.toml</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">
+      Everything is managed with <a href="https://chezmoi.io">chezmoi</a> and kept in sync
+      between machines by <a href="#dotsync"><code>dotsync</code></a>.
+    </p>
+
+    <h2 id="install">Install</h2>
+    <pre><span class="k">brew</span> install chezmoi
+<span class="k">chezmoi</span> init --apply chiragthesia/dotfiles</pre>
+    <p>
+      That installs everything brew-installable (Ghostty, worktrunk, zoxide, fzf, fd, eza,
+      bat, lazygit, jq, bun, atuin, television, go-task), then herdr itself via its own
+      installer, wires herdr's worktrunk plugin, merges a curated set of Claude Code
+      settings, and installs the <code>caveman</code> and <code>claude-hud</code> plugins.
+    </p>
+    <div class="note warn">
+      <strong>After the first apply:</strong> reload Ghostty once (<kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>,</kbd>
+      or quit and reopen) so the <code>=unbind</code> lines and theme take effect, and launch
+      <code>nvim</code> once and wait — lazy.nvim bootstraps and Mason installs language
+      servers on first real launch.
+    </div>
+
+    <h2 id="layers">How the layers fit</h2>
+    <p>
+      A key pressed in the terminal is seen by Ghostty first. If Ghostty has its own
+      action bound to that chord, herdr and nvim never see it. So the config works
+      top-down: Ghostty <em>unbinds</em> a chord, which lets it fall through to herdr;
+      herdr leaves <kbd>⌃</kbd><span class="sep">+</span><kbd>h/j/k/l</kbd> alone, which lets
+      it fall through to nvim.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Chord</th><th>Ghostty does</th><th>So it reaches</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>t</kbd></td><td>unbind (was: new Ghostty tab)</td><td>herdr <code>new_tab</code></td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>w</kbd></td><td>unbind</td><td>herdr <code>close_pane</code></td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>w</kbd></td><td>unbind (was: close window)</td><td>herdr <code>close_tab</code></td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>k</kbd></td><td>unbind</td><td>herdr <code>goto</code></td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>d</kbd></td><td>unbind (was: native split)</td><td>herdr <code>split_vertical</code></td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>d</kbd></td><td>unbind (was: native split)</td><td>herdr <code>split_horizontal</code></td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>g</kbd></td><td>unbind</td><td>herdr lazygit popup</td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>e</kbd></td><td>unbind</td><td>nvim <code>&lt;D-e&gt;</code> focus explorer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      Ghostty's native splits are a separate, untracked terminal surface — herdr doesn't
+      know about them. That's the same problem as <kbd>⌘</kbd><span class="sep">+</span><kbd>t</kbd>
+      opening a Ghostty tab instead of a herdr one, which is why both are unbound.
+    </div>
+
+    <h2 id="ghostty">Ghostty</h2>
+    <p class="filepath">~/.config/ghostty/config</p>
+    <h3>Look and feel</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Setting</th><th>Value</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><code>theme</code></td><td>TokyoNight Night</td><td>matches herdr's <code>tokyo-night</code> and nvim's <code>tokyonight-night</code></td></tr>
+          <tr><td><code>macos-option-as-alt</code></td><td>left</td><td>makes herdr's <kbd>⌥</kbd><span class="sep">+</span><kbd>hjkl</kbd> work; right Option still composes special characters</td></tr>
+          <tr><td><code>font-size</code></td><td>14</td><td></td></tr>
+          <tr><td><code>window-padding-x/y</code></td><td>10 / 8</td><td></td></tr>
+          <tr><td><code>cursor-style</code></td><td>bar, no blink</td><td></td></tr>
+          <tr><td><code>scrollback-limit</code></td><td>100000</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      nvim runs <strong>transparent</strong>, so Ghostty's background is what actually
+      shows through the editor. Changing the Ghostty theme changes how nvim looks.
+    </div>
+
+    <h2 id="herdr">herdr</h2>
+    <p class="filepath">~/.config/herdr/config.toml</p>
+    <p>
+      The prefix is <kbd>`</kbd> (backtick) and is the <em>fallback</em> — everything
+      frequent also has a direct chord. Where two are listed, either works.
+    </p>
+
+    <h3>Tabs</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>c</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>t</kbd></td><td>New tab</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>x</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>w</kbd></td><td>Close tab</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>t</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>r</kbd></td><td>Rename tab</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>p</kbd><span class="sep">·</span><kbd>⌃</kbd><span class="sep">+</span><kbd>←</kbd></td><td>Previous tab</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>n</kbd><span class="sep">·</span><kbd>⌃</kbd><span class="sep">+</span><kbd>→</kbd></td><td>Next tab</td></tr>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>←</kbd></td><td>Move tab left <span class="why">reorders the tab, unlike previous/next which only move focus</span></td></tr>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>→</kbd></td><td>Move tab right</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>g</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>k</kbd></td><td>Goto / command palette</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Panes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>v</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>d</kbd></td><td>Split vertical <span class="why">side-by-side (left | right)</span></td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>-</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>d</kbd></td><td>Split horizontal <span class="why">stacked (top / bottom)</span></td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>x</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>w</kbd></td><td>Close pane</td></tr>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>h</kbd><span class="sep">/</span><kbd>j</kbd><span class="sep">/</span><kbd>k</kbd><span class="sep">/</span><kbd>l</kbd></td><td>Focus pane left / down / up / right <span class="why">also <kbd>`</kbd> then <kbd>h j k l</kbd></span></td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇥</kbd><span class="sep">·</span><kbd>⌥</kbd><span class="sep">+</span><kbd>↑</kbd></td><td>Cycle pane next</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>⇥</kbd><span class="sep">·</span><kbd>⌥</kbd><span class="sep">+</span><kbd>↓</kbd></td><td>Cycle pane previous</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>h</kbd></td><td>Swap pane left</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>l</kbd></td><td>Swap pane right</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>s</kbd></td><td>Move pane to another tab <span class="why">fzf picker, custom script</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      Pane focus uses <kbd>⌥</kbd>, not <kbd>⌃</kbd>, because LazyVim binds
+      <kbd>⌃</kbd><span class="sep">+</span><kbd>h/j/k/l</kbd> to nvim's own window
+      navigation (editor ↔ explorer). Both layers get a working set of keys.
+    </div>
+
+    <h3>Workspaces</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>k</kbd><span class="sep">·</span><kbd>⌃</kbd><span class="sep">+</span><kbd>↑</kbd></td><td>Previous workspace</td></tr>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>j</kbd><span class="sep">·</span><kbd>⌃</kbd><span class="sep">+</span><kbd>↓</kbd></td><td>Next workspace</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>w</kbd><span class="sep">·</span><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>r</kbd></td><td>Rename workspace</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note warn">
+      <kbd>⌃</kbd><span class="sep">+</span><kbd>↑</kbd> and <kbd>⌃</kbd><span class="sep">+</span><kbd>↓</kbd>
+      are still claimed by macOS Mission Control and are effectively dead. The
+      <kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd> chords are the ones that actually work.
+    </div>
+
+    <h3>Agents</h3>
+    <p>
+      <kbd>⌥</kbd><span class="sep">+</span><kbd>hjkl</kbd> moves <em>within</em> a layout;
+      <kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>hjkl</kbd>
+      moves <em>across</em> workspaces and agents.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>h</kbd></td><td>Previous agent</td></tr>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>l</kbd></td><td>Next agent</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⌥</kbd><span class="sep">+</span><kbd>1</kbd>…<kbd>9</kbd></td><td>Focus agent by index</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>f</kbd></td><td>Focus most recently <em>finished</em> agent <span class="why">custom: picks the highest <code>state_change_seq</code> among idle/done agents; ignores blocked ones, which need input rather than being done</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Popups, panes and plugin actions</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>g</kbd><span class="sep">·</span><kbd>`</kbd><span class="sep">then</span><kbd>d</kbd></td><td>lazygit popup over the focused pane <span class="why">90% × 85%, opens in that pane's cwd, <kbd>q</kbd> closes</span></td></tr>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>b</kbd></td><td>Browser pane <span class="why"><code>terminal-browser</code>, Kitty-graphics, launched as a plain split</span></td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>g</kbd></td><td>Worktree: switch / create from default branch <span class="why">worktrunk plugin</span></td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>b</kbd></td><td>Worktree: switch / create from local or remote branches</td></tr>
+          <tr><td><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd><span class="sep">+</span><kbd>m</kbd></td><td>Worktree: merge into the target branch</td></tr>
+          <tr><td><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>g</kbd></td><td>herdr's own native worktree modal <span class="why">plain built-in form; the plugin took its default chord</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      Worktree <strong>remove</strong> is deliberately left unbound — its default chord
+      collides with <code>close_workspace</code>, and trading that away for a rare
+      destructive action is a bad deal. Run it from the palette instead.
+    </div>
+
+    <h3>Other herdr settings</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><code>theme.name</code></td><td><code>tokyo-night</code>, <code>auto_switch = false</code></td></tr>
+          <tr><td><code>ui.toast.delivery</code></td><td><code>system</code> — macOS notifications</td></tr>
+          <tr><td><code>ui.status_indicators</code></td><td><code>symbols</code></td></tr>
+          <tr><td><code>experimental.kitty_graphics</code></td><td><code>true</code> — needed by the browser pane</td></tr>
+          <tr><td><code>[worktrees]</code></td><td>unset — herdr's native worktrees stay at <code>~/.herdr/worktrees</code>, separate from worktrunk's</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="neovim">Neovim</h2>
+    <p class="filepath">~/.config/nvim/</p>
+    <p>
+      LazyVim, tuned to behave like VS Code while browsing: a persistent explorer with
+      click-to-preview, absolute line numbers, and <kbd>⌃</kbd>-click to jump to a definition.
+    </p>
+
+    <h3>Navigation and search</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>⌃</kbd><span class="sep">+</span><kbd>p</kbd></td><td>Find files <span class="why">VS Code's Quick Open</span></td></tr>
+          <tr><td><kbd>⌃</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>f</kbd><span class="sep">·</span><kbd>/</kbd></td><td>Search in project <span class="why">live grep — <kbd>/</kbd> is rebound away from in-file search</span></td></tr>
+          <tr><td><kbd>g</kbd><kbd>/</kbd></td><td>Search in file <span class="why">vim's original <kbd>/</kbd></span></td></tr>
+          <tr><td><kbd>⌘</kbd><span class="sep">+</span><kbd>e</kbd></td><td>Focus explorer <span class="why">focus only — it does not hide it</span></td></tr>
+          <tr><td><kbd>⌃</kbd>-click<span class="sep">·</span><kbd>⌘</kbd>-click</td><td>Go to definition <span class="why">silent when no language server is attached</span></td></tr>
+          <tr><td><kbd>⌃</kbd>-right-click</td><td>Go back</td></tr>
+          <tr><td><kbd>Space</kbd><kbd>c</kbd><kbd>p</kbd></td><td>Copy full file path</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Explorer <span class="pill">neo-tree</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Input</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>Single click</td><td>Preview the file <span class="why">transient — replaced by the next preview</span></td></tr>
+          <tr><td><kbd>j</kbd><span class="sep">/</span><kbd>k</kbd></td><td>Preview the file under the cursor <span class="why">same as clicking, so you can crawl by keyboard</span></td></tr>
+          <tr><td><kbd>⏎</kbd></td><td>Open the file and move the cursor into it</td></tr>
+          <tr><td>Double click</td><td>Pin the file open</td></tr>
+          <tr><td>Click a directory</td><td>Expand / collapse</td></tr>
+          <tr><td><kbd>/</kbd></td><td>Disabled in the tree <span class="why">stays project search rather than neo-tree's filter</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">
+      Width 34. Dotfiles shown, gitignored files hidden, <code>.git</code> and
+      <code>.DS_Store</code> never shown. Follows the current file. Material-style folder
+      icons with per-folder colors. Sits flush with the editor — no seam between panes.
+    </p>
+
+    <h3>Git <span class="pill">diffview</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Space</kbd><kbd>g</kbd><kbd>v</kbd></td><td>Open diffview (working tree)</td></tr>
+          <tr><td><kbd>Space</kbd><kbd>g</kbd><kbd>V</kbd></td><td>Close diffview</td></tr>
+          <tr><td><kbd>Space</kbd><kbd>g</kbd><kbd>t</kbd><kbd>f</kbd></td><td>File history (current file)</td></tr>
+          <tr><td><kbd>Space</kbd><kbd>g</kbd><kbd>t</kbd><kbd>b</kbd></td><td>Branch history (all files)</td></tr>
+          <tr><td><kbd>Space</kbd><kbd>g</kbd><kbd>c</kbd></td><td>Git branch picker <span class="why">bare <kbd>c</kbd> stays the change operator</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted">Merge tool uses the <code>diff1_plain</code> layout for conflict resolution.</p>
+
+    <h3>File manager <span class="pill">yazi</span></h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Keys</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td><kbd>Space</kbd><kbd>-</kbd></td><td>Open yazi at the current file</td></tr>
+          <tr><td><kbd>Space</kbd><kbd>c</kbd><kbd>w</kbd></td><td>Open yazi in nvim's cwd</td></tr>
+          <tr><td><kbd>⌃</kbd><span class="sep">+</span><kbd>↑</kbd></td><td>Resume the last yazi session</td></tr>
+          <tr><td><kbd>F1</kbd></td><td>Show yazi help</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Options</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Option</th><th>Value</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><code>relativenumber</code></td><td>off</td><td>absolute numbers, like VS Code</td></tr>
+          <tr><td><code>mouse</code></td><td><code>a</code></td><td>click-to-preview and ⌃-click depend on it</td></tr>
+          <tr><td><code>confirm</code></td><td>on</td><td>prompt instead of failing on unsaved quit</td></tr>
+          <tr><td><code>showtabline</code></td><td>2</td><td>filename tab always visible, even with one file</td></tr>
+          <tr><td><code>wrap</code> / <code>linebreak</code> / <code>breakindent</code></td><td>on</td><td>wrap long lines instead of scrolling horizontally</td></tr>
+          <tr><td><code>loaded_netrw</code></td><td>disabled</td><td>neo-tree owns the tree; <code>nvim .</code> never leaves a directory buffer in the editor</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Language support</h3>
+    <p>
+      LazyVim extras enabled: <code>neo-tree</code>, <code>typescript</code>,
+      <code>python</code>, <code>rust</code>, <code>json</code>, <code>toml</code>,
+      <code>markdown</code>.
+    </p>
+    <p>
+      <strong>Python</strong> auto-activates a project <code>.venv</code> or
+      <code>venv</code> by walking up from the current file — the equivalent of VS Code's
+      "Select Interpreter". Pyright is kept for ⌃-click and hover but has
+      <code>typeCheckingMode = "off"</code>, so it doesn't surface type errors.
+    </p>
+    <p class="muted">
+      <code>lazy-lock.json</code> is committed, so plugin versions match what was actually
+      tested rather than whatever is newest.
+    </p>
+
+    <h2 id="shell">zsh</h2>
+    <p class="filepath">~/.config/zsh/workflow.zsh</p>
+    <p>
+      Wired into <code>~/.zshrc</code> by a single appended <code>source</code> line rather
+      than by managing <code>.zshrc</code> directly — that file usually already has real
+      personal content on any machine this runs on.
+    </p>
+
+    <h3>Aliases</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Alias</th><th>Runs</th></tr></thead>
+        <tbody>
+          <tr><td><code>ls</code></td><td><code>eza</code></td></tr>
+          <tr><td><code>ll</code></td><td><code>eza -la</code></td></tr>
+          <tr><td><code>tree</code></td><td><code>eza --tree</code></td></tr>
+          <tr><td><code>cat</code></td><td><code>bat</code></td></tr>
+          <tr><td><code>copypath</code></td><td><code>pwd | pbcopy</code></td></tr>
+          <tr><td><code>gtask</code></td><td><code>task</code></td></tr>
+          <tr><td><code>c</code><span class="sep">·</span><code>cr</code><span class="sep">·</span><code>cc</code></td><td><code>claude</code> · <code>claude --resume</code> · <code>claude --continue</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Integrations</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tool</th><th>Gives you</th></tr></thead>
+        <tbody>
+          <tr><td>zoxide</td><td><code>z &lt;partial&gt;</code> jumps, <code>zi</code> fzf-picks <span class="why">learns directories as you <code>cd</code>; <code>$HOME</code> is excluded by default</span></td></tr>
+          <tr><td>fzf</td><td><kbd>⌃</kbd><span class="sep">+</span><kbd>r</kbd> history, <kbd>⌃</kbd><span class="sep">+</span><kbd>t</kbd> files <span class="why">only when attached to a terminal</span></td></tr>
+          <tr><td>atuin</td><td>replaces <kbd>⌃</kbd><span class="sep">+</span><kbd>r</kbd> with searchable shell history</td></tr>
+          <tr><td>television</td><td><code>tv</code> — context-aware fuzzy picker</td></tr>
+          <tr><td>worktrunk</td><td>shell integration so <code>wt switch</code> actually <code>cd</code>s the shell <span class="why">not optional — without it, <code>wt switch</code> only prints the target directory</span></td></tr>
+          <tr><td>oh-my-zsh</td><td><code>robbyrussell</code>, plus git, docker, autosuggestions, completions, history-substring-search, syntax-highlighting</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">
+      The oh-my-zsh block is guarded by <code>! typeset -f omz</code>: on a machine whose
+      <code>.zshrc</code> already sources oh-my-zsh, sourcing it a second time re-sets
+      <code>PROMPT</code> from <code>ZSH_THEME</code> and silently overrides a prompt such as
+      starship set earlier in the file.
+    </div>
+    <p class="muted">
+      Also: a stale-worktree guard that falls back to <code>~</code> if the cwd was deleted,
+      <code>BAT_THEME=TwoDark</code>, fzf defaults using <code>fd</code>, and guarded
+      nvm/pnpm/IntelliJ entries that are no-ops when those tools aren't installed.
+    </p>
+
+    <h2 id="worktrunk">worktrunk</h2>
+    <p class="filepath">~/.config/worktrunk/config.toml</p>
+    <pre><span class="c"># Fires before branch resolution, for every entry point.</span>
+<span class="k">[pre-switch]</span>
+fetch = <span class="s">"git fetch origin --quiet"</span></pre>
+    <p>
+      Without that fetch, <code>--create</code> bases the new branch off whatever
+      <code>origin/&lt;default&gt;</code> happens to point at locally, which can be stale.
+      Worktrees go to the tool's own default sibling-directory location.
+    </p>
+    <p class="muted">
+      No <code>[post-start]</code> hooks ship here. Add your own if you want something to
+      run on every worktree creation.
+    </p>
+
+    <h2 id="claude">Claude Code</h2>
+    <p>
+      A curated subset of settings is <strong>merged</strong> into whatever
+      <code>~/.claude/settings.json</code> already has — never overwritten, because that
+      file commonly carries real personal content and credentials.
+    </p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>editor mode</td><td><code>vim</code></td></tr>
+          <tr><td>TUI</td><td><code>fullscreen</code>, theme <code>auto</code></td></tr>
+          <tr><td>effort level</td><td><code>xhigh</code></td></tr>
+          <tr><td>voice</td><td>enabled, hold-to-talk</td></tr>
+          <tr><td>status line</td><td>claude-hud, run through bun</td></tr>
+          <tr><td>permissions</td><td>ask on <code>git push --force</code>, <code>reset --hard</code>, <code>clean -f</code>, <code>branch -D</code>, <code>rebase</code>; deny <code>rm -rf /</code></td></tr>
+          <tr><td>hooks</td><td>PostToolUse lint on edit — eslint --fix, pylint, or rubocop by extension</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Plugins installed fresh from their own marketplaces: <code>caveman</code>,
+      <code>claude-hud</code>. herdr's <code>claude</code> integration reports agent lifecycle
+      state to herdr's sidebar. The <code>combat</code> rationalist-skills toolkit
+      (<code>combat:murphyjitsu</code> and friends) is cloned from upstream rather than
+      vendored, since Claude Code's plugin system doesn't track it.
+    </p>
+
+    <h2 id="dotsync">dotsync</h2>
+    <p>
+      One command to reconcile a machine with the repo, in both directions.
+    </p>
+    <pre><span class="k">dotsync</span>                      <span class="c"># capture, ask, pull, apply</span>
+<span class="k">dotsync</span> <span class="s">"commit message"</span>     <span class="c"># same, with your own message</span>
+<span class="k">dotsync</span> -y                   <span class="c"># push without asking</span>
+<span class="k">dotsync</span> -n                   <span class="c"># never push this run; just pull and apply</span></pre>
+    <ol>
+      <li><code>chezmoi re-add</code> — pulls local edits to managed files back into the source repo</li>
+      <li>Secret scan — a hit stops everything before it leaves the machine</li>
+      <li><strong>Asks</strong> before sending anything to GitHub (<kbd>y</kbd> / <kbd>n</kbd> / <kbd>d</kbd> for a diff)</li>
+      <li>Pulls, reports which commits arrived and which files will change here, then applies</li>
+      <li>Reloads herdr's config, and names anything else needing a restart</li>
+    </ol>
+    <div class="note">
+      Declining the push still pulls and applies, so <kbd>n</kbd> keeps the machine up to
+      date without publishing anything. Local edits stay uncommitted in the source repo
+      until the next run.
+    </div>
+    <p>
+      A new file isn't picked up until it's registered once:
+      <code>chezmoi add ~/.config/nvim/lua/plugins/foo.lua</code>. After that every edit to
+      it syncs automatically.
+    </p>
+    <h4>What needs a restart</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Program</th><th>To pick up a change</th></tr></thead>
+        <tbody>
+          <tr><td>herdr</td><td>automatic — <code>dotsync</code> reloads it</td></tr>
+          <tr><td>Ghostty</td><td><kbd>⌘</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>,</kbd> or relaunch</td></tr>
+          <tr><td>zsh</td><td>a new shell, or <code>exec zsh</code></td></tr>
+          <tr><td>nvim</td><td>relaunch</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 id="notes">Design notes</h2>
+    <p>Why several bindings are what they look like, so they don't get "fixed" later.</p>
+
+    <h3>Backtick, not §</h3>
+    <p>
+      The upstream layout this is based on uses <kbd>§</kbd>, an ISO-layout key that
+      doesn't exist on US ANSI keyboards. Backtick sits in the same physical slot, so it's
+      the closest translation.
+    </p>
+
+    <h3>Readline owns several Alt chords</h3>
+    <p>
+      In a shell, <kbd>⌥</kbd><span class="sep">+</span><kbd>b</kbd> is backward-word,
+      <kbd>⌥</kbd><span class="sep">+</span><kbd>d</kbd> is kill-word and
+      <kbd>⌥</kbd><span class="sep">+</span><kbd>r</kbd> is revert-line. Binding those at the
+      multiplexer level steals them from every shell in every pane. That's why splits use
+      <kbd>⌘</kbd><span class="sep">+</span><kbd>d</kbd> and rename uses
+      <kbd>⌘</kbd><span class="sep">+</span><kbd>r</kbd>.
+    </p>
+    <div class="note">
+      This doesn't apply behind the prefix. Prefix mode claims the next keystroke itself,
+      so <kbd>`</kbd> then <kbd>f</kbd> never reaches the shell — which is why indexed agent
+      focus can safely live at <kbd>`</kbd> then <kbd>⌥</kbd><span class="sep">+</span><kbd>1…9</kbd>.
+      <kbd>⌥</kbd><span class="sep">+</span><kbd>b</kbd> for the browser pane is the one
+      deliberate exception.
+    </div>
+
+    <h3>Vertical means side-by-side</h3>
+    <p>
+      <code>split_vertical</code> puts panes left | right and <code>split_horizontal</code>
+      stacks them top / bottom — matching vim and what these same keys already did as
+      Ghostty's native splits before they were unbound.
+    </p>
+
+    <h3>Modifier families</h3>
+    <ul>
+      <li><kbd>⌥</kbd><span class="sep">+</span><kbd>hjkl</kbd> — move <em>within</em> (panes)</li>
+      <li><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>hjkl</kbd> — move <em>across</em> (agents on h/l, workspaces on j/k)</li>
+      <li><kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span>arrows — reorder rather than navigate</li>
+      <li><kbd>`</kbd><span class="sep">then</span><kbd>⇧</kbd> — the rarer or more destructive variant of a chord</li>
+    </ul>
+
+    <h3>Two worktree systems, on purpose</h3>
+    <p>
+      herdr has native worktree creation and worktrunk is a separate tool. The worktrunk
+      plugin took herdr's default chord, so the native modal was given
+      <kbd>⌥</kbd><span class="sep">+</span><kbd>⇧</kbd><span class="sep">+</span><kbd>g</kbd>
+      back. They keep separate directories and don't interfere.
+    </p>
+  </main>
+
+  <aside class="toc">
+    <div class="nav-label">On this page</div>
+    <a href="#overview">Overview</a>
+    <a href="#install">Install</a>
+    <a href="#layers">How the layers fit</a>
+    <a href="#ghostty">Ghostty</a>
+    <a href="#herdr">herdr</a>
+    <a href="#neovim">Neovim</a>
+    <a href="#shell">zsh</a>
+    <a href="#worktrunk">worktrunk</a>
+    <a href="#claude">Claude Code</a>
+    <a href="#dotsync">dotsync</a>
+    <a href="#notes">Design notes</a>
+  </aside>
+
+</div>
+</body>
+</html>

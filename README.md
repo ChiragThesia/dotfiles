@@ -16,6 +16,52 @@ bat, lazygit, jq, bun), then herdr itself (not on Homebrew — its own installer
 wires herdr's worktrunk plugin, merges a curated set of Claude Code settings, and
 installs the `caveman` and `claude-hud` Claude Code plugins fresh.
 
+## Keybindings and config reference
+
+Full reference — every keybinding, every deliberate modification, and why each one is
+what it is: **[`docs/index.html`](docs/index.html)**. Open it locally with
+`open docs/index.html`, or serve the `docs/` folder over GitHub Pages.
+
+The chords worth memorising first. herdr's prefix is `` ` `` (backtick), and everything
+frequent also has a direct chord:
+
+| Keys | Does |
+|---|---|
+| `⌘T` / `` ` ``+`c` | New tab |
+| `⌘W` / `` ` ``+`x` | Close pane |
+| `⌘D` / `` ` ``+`v` | Split side-by-side |
+| `⌘⇧D` / `` ` ``+`-` | Split stacked |
+| `⌥H` `⌥J` `⌥K` `⌥L` | Focus pane left / down / up / right |
+| `⌥⇧H` / `⌥⇧L` | Previous / next agent |
+| `⌥⇧J` / `⌥⇧K` | Next / previous workspace |
+| `` ` ``+`f` | Jump to the agent that most recently finished |
+| `⌘⇧G` / `` ` ``+`d` | lazygit over the focused pane |
+| `` ` ``+`⇧G` | Worktree: switch / create (worktrunk) |
+| `⌘K` / `` ` ``+`g` | Command palette |
+| `⌘R` | Rename tab |
+| `⌃P` | nvim: find files |
+| `⌃⇧F` or `/` | nvim: search in project (`g/` searches within the file) |
+| `⌘E` | nvim: focus explorer |
+| `⌃`-click | nvim: go to definition |
+
+Two things that catch people out: `⌥` chords avoid `b`/`d`/`r` because readline owns
+those in every shell, and `⌃`+`h/j/k/l` is left alone so LazyVim keeps its own window
+navigation.
+
+## Keeping machines in sync
+
+`dotsync` is one command for the whole round trip: capture local edits → secret scan →
+ask before pushing → pull → apply → reload herdr. It replaces the manual
+`chezmoi re-add` / commit / push dance below, though the rules in that section still
+apply to anything done by hand.
+
+```bash
+dotsync                 # capture, ask before pushing, pull, apply
+dotsync "message"       # same, with your own commit message
+dotsync -y              # push without asking
+dotsync -n              # never push this run; just pull and apply
+```
+
 ## For Claude Code sessions working on this repo — follow exactly, in order
 
 These are the actual commands verified to work while building this repo. Do not
