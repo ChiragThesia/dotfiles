@@ -46,6 +46,13 @@ next_workspace = ["ctrl+down", "alt+shift+j"]
 cycle_pane_next = ["prefix+tab", "alt+up"]
 cycle_pane_previous = ["prefix+shift+tab", "alt+down"]
 
+# cmd+r/cmd+shift+r rather than alt+r for the workspace one: alt+r is
+# readline's revert-line (\er), same class of mistake as alt+b/alt+d
+# earlier. Neither cmd+r nor cmd+shift+r is claimed by Ghostty, so no
+# unbind needed here.
+rename_tab = ["prefix+shift+t", "cmd+r"]
+rename_workspace = ["prefix+shift+w", "cmd+shift+r"]
+
 # vertical = side-by-side (left|right), horizontal = stacked (top|bottom) --
 # standard vim/terminal-app convention, matching what these same keys already
 # did as Ghostty's own native split (new_split:right / new_split:down) before
