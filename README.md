@@ -12,19 +12,20 @@ One command, no prerequisites beyond `curl` (present on essentially every macOS 
 Linux box, including a stock EC2 AMI):
 
 ```bash
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply chiragthesia/dotfiles
+curl -fsSL https://raw.githubusercontent.com/chiragthesia/dotfiles/main/install.sh | sh
 ```
 
-This installs chezmoi itself first (no Homebrew required for that step — chezmoi's
-own installer just downloads its binary), then runs `chezmoi init --apply`, which
-installs Homebrew if it's missing, installs everything brew-installable (worktrunk,
-zoxide, fzf, fd, eza, bat, lazygit, jq, bun, plus Ghostty on macOS only — see below),
-installs herdr itself (not on Homebrew — its own installer), wires herdr's worktrunk
-plugin, merges a curated set of Claude Code settings, and installs the `caveman` and
-`claude-hud` Claude Code plugins fresh.
+[`install.sh`](install.sh) installs chezmoi itself first if it's missing (no
+Homebrew required for that step — just downloads the chezmoi binary), then hands off
+to `chezmoi init --apply`, which installs Homebrew if it's missing, installs
+everything brew-installable (worktrunk, zoxide, fzf, fd, eza, bat, lazygit, jq, bun,
+plus Ghostty on macOS only — see below), installs herdr itself (not on Homebrew —
+its own installer), wires herdr's worktrunk plugin, merges a curated set of Claude
+Code settings, and installs the `caveman` and `claude-hud` Claude Code plugins fresh.
 
-Already have Homebrew and prefer that path: `brew install chezmoi && chezmoi init
---apply chiragthesia/dotfiles` works identically.
+Already have Homebrew and prefer that path, or already have chezmoi: `brew install
+chezmoi && chezmoi init --apply chiragthesia/dotfiles` works identically — `install.sh`
+is just a convenience wrapper around exactly that.
 
 ## Linux / headless boxes
 
@@ -92,7 +93,7 @@ approach failed during testing.
 
 ### Pulling / applying (any machine that is NOT the machine this repo was authored on)
 
-1. First time on a machine: `sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply chiragthesia/dotfiles`
+1. First time on a machine: `curl -fsSL https://raw.githubusercontent.com/chiragthesia/dotfiles/main/install.sh | sh`
    (or `brew install chezmoi && chezmoi init --apply chiragthesia/dotfiles` if Homebrew's already there).
 2. Updating a machine already set up this way: `chezmoi update` (equivalent to
    `cd "$(chezmoi source-path)" && git pull --autostash && chezmoi apply` — either form is fine).
