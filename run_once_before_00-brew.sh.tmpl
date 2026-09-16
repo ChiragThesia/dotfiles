@@ -1,11 +1,30 @@
 #!/usr/bin/env bash
 # Installs everything brew-installable in this workflow. herdr itself is not
 # on Homebrew (see run_once_after_10) -- everything else is.
+#
+# Cross-platform: Homebrew's own installer supports Linux (Linuxbrew) as well
+# as macOS, so a fresh EC2/Linux box gets the same one-liner as a fresh Mac.
+# Ghostty is a GUI app with no reason to run on a headless remote box (you'd
+# SSH into it *from* Ghostty locally instead), so its cask lives in the
+# macOS-only Brewfile.darwin, kept out of the base Brewfile entirely.
 set -euo pipefail
 
 if ! command -v brew >/dev/null 2>&1; then
-  echo "Homebrew not found. Install it first: https://brew.sh" >&2
-  exit 1
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+  if [ -x /opt/homebrew/bin/brew ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+  elif [ -x /usr/local/bin/brew ]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+  elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+  fi
 fi
 
+command -v brew >/dev/null 2>&1 || { echo "Homebrew install did not put brew on PATH" >&2; exit 1; }
+
 brew bundle --file="{{ .chezmoi.sourceDir }}/Brewfile"
+
+{{ if eq .chezmoi.os "darwin" -}}
+brew bundle --file="{{ .chezmoi.sourceDir }}/Brewfile.darwin"
+{{ end -}}

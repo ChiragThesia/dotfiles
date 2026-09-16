@@ -3,6 +3,7 @@
 # directory. Scripts still reach them via {{ .chezmoi.sourceDir }}.
 README.md
 Brewfile
+Brewfile.darwin
 claude-settings-patch.json
 docs
 

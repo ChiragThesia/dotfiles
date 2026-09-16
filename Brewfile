@@ -1,4 +1,3 @@
-cask "ghostty"
 brew "worktrunk"
 brew "zoxide"
 brew "fzf"
