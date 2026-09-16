@@ -10,12 +10,11 @@ status_indicators = "symbols"
 name = "tokyo-night"
 auto_switch = false
 
-# Claude Code already sets a real terminal title reflecting the actual task
-# (verified live: terminal_title_stripped = "portable-dotfiles-chezmoi-setup"
-# for this very session) -- the default row just doesn't surface it, showing
-# the literal agent type ("claude") instead. Swap it in.
+# Sidebar already groups by workspace/tab visually -- repeating them plus the
+# literal "claude" agent-type string was just noise. One row: status + the
+# real task title Claude Code itself sets (terminal_title_stripped).
 [ui.sidebar.agents.rows_by_agent]
-claude = [["state_icon", "machine", "workspace", "tab"], ["terminal_title_stripped"], ["agent"]]
+claude = [["state_icon", "tab"], ["terminal_title_stripped"]]
 
 # [worktrees] left unset -- herdr's own native worktree creation (right-click
 # a workspace, alt+shift+g -> new_worktree) stays on its default location
