@@ -26,22 +26,37 @@ fi
 # Linuxbrew has two possible prefixes depending on whether the installer
 # could sudo: /home/linuxbrew/.linuxbrew (multi-user, needs sudo) or
 # $HOME/.linuxbrew (single-user fallback -- what a non-root, no-sudo
-# Coder/EC2 user actually gets). Re-resolved unconditionally (not just after
-# a fresh install) since this script now also runs again on machines where
-# brew was already installed by an earlier run.
-if ! command -v brew >/dev/null 2>&1; then
-  if [ -x /opt/homebrew/bin/brew ]; then
-    eval "$(/opt/homebrew/bin/brew shellenv)"
-  elif [ -x /usr/local/bin/brew ]; then
-    eval "$(/usr/local/bin/brew shellenv)"
-  elif [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-  elif [ -x "$HOME/.linuxbrew/bin/brew" ]; then
-    eval "$("$HOME/.linuxbrew/bin/brew" shellenv)"
+# Coder/EC2 user actually gets). Resolved to an absolute path unconditionally
+# (not just after a fresh install, and not just via `command -v`) so it's
+# available below for persisting into .bashrc, and so this still works on
+# reruns where brew was already installed by an earlier pass.
+BREW_BIN=""
+for candidate in /opt/homebrew/bin/brew /usr/local/bin/brew /home/linuxbrew/.linuxbrew/bin/brew "$HOME/.linuxbrew/bin/brew"; do
+  if [ -x "$candidate" ]; then
+    BREW_BIN="$candidate"
+    break
   fi
-fi
+done
+[ -n "$BREW_BIN" ] || BREW_BIN="$(command -v brew || true)"
 
-command -v brew >/dev/null 2>&1 || { echo "Homebrew install did not put brew on PATH" >&2; exit 1; }
+[ -n "$BREW_BIN" ] || { echo "Homebrew install did not produce a brew binary" >&2; exit 1; }
+
+eval "$("$BREW_BIN" shellenv)"
+
+# NONINTERACTIVE=1 skips Homebrew's own "add this to your shell profile" step
+# (it printed the exact fix on a real box: `echo 'eval "$(.../brew shellenv
+# bash)"' >> ~/.bashrc`) -- without persisting it ourselves, brew resolves
+# fine inside this script's own process but every *new* shell afterward
+# (this one's PATH change dies with this process) still can't find brew, or
+# anything brew installs: zsh, nvim, rg, yazi. Idempotent marker, same
+# pattern as run_once_after_05's .zshrc append. .zshrc itself is already
+# covered by this same bootstrap living in workflow.zsh.
+BASHRC="$HOME/.bashrc"
+MARKER="# dotfiles: homebrew shellenv"
+touch "$BASHRC"
+if ! grep -qF "$MARKER" "$BASHRC"; then
+  printf '\n%s\neval "$(%s shellenv)"\n' "$MARKER" "$BREW_BIN" >> "$BASHRC"
+fi
 
 brew bundle --file="{{ .chezmoi.sourceDir }}/Brewfile"
 
