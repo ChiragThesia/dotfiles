@@ -2,6 +2,16 @@
 # Installs everything brew-installable in this workflow. herdr itself is not
 # on Homebrew (see run_once_after_10) -- everything else is.
 #
+# run_onchange_, not run_once_: this script only reads Brewfile/Brewfile.darwin
+# at runtime, it doesn't embed their contents, so chezmoi's run_once tracking
+# (hashes the script's own rendered content) is blind to edits made to either
+# file. Hit this for real: added neovim/ripgrep/yazi to Brewfile, ran
+# `chezmoi update` on a already-set-up machine, and 00-brew never re-ran
+# because this script file itself hadn't changed. The hashes below make the
+# script's own content change whenever either Brewfile does, forcing a rerun.
+# Brewfile hash: {{ include "Brewfile" | sha256sum }}
+# Brewfile.darwin hash: {{ include "Brewfile.darwin" | sha256sum }}
+#
 # Cross-platform: Homebrew's own installer supports Linux (Linuxbrew) as well
 # as macOS, so a fresh EC2/Linux box gets the same one-liner as a fresh Mac.
 # Ghostty is a GUI app with no reason to run on a headless remote box (you'd
@@ -11,14 +21,15 @@ set -euo pipefail
 
 if ! command -v brew >/dev/null 2>&1; then
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
 
-  # Linuxbrew has two possible prefixes depending on whether the installer
-  # could sudo: /home/linuxbrew/.linuxbrew (multi-user, needs sudo) or
-  # $HOME/.linuxbrew (single-user fallback -- what a non-root, no-sudo
-  # Coder/EC2 user actually gets). Missing the second one is what broke this
-  # on a real box: brew bundle worked (found via this same fallback further
-  # down), but a later, separate script process re-derived this from scratch
-  # and needs the same full list.
+# Linuxbrew has two possible prefixes depending on whether the installer
+# could sudo: /home/linuxbrew/.linuxbrew (multi-user, needs sudo) or
+# $HOME/.linuxbrew (single-user fallback -- what a non-root, no-sudo
+# Coder/EC2 user actually gets). Re-resolved unconditionally (not just after
+# a fresh install) since this script now also runs again on machines where
+# brew was already installed by an earlier run.
+if ! command -v brew >/dev/null 2>&1; then
   if [ -x /opt/homebrew/bin/brew ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
   elif [ -x /usr/local/bin/brew ]; then
