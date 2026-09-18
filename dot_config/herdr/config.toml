@@ -138,8 +138,6 @@ height = "85%"
 
 # worktrunk plugin. Supersedes the built-in new_worktree (same chord) so worktree
 # creation goes through wt and its post-start hooks instead of herdr's own.
-# Remove is deliberately unbound: prefix+shift+d is close_workspace, and clobbering
-# that for a rare destructive action is a bad trade. Invoke it from the palette.
 [[keys.command]]
 key = "prefix+shift+g"
 type = "plugin_action"
@@ -157,6 +155,15 @@ key = "prefix+shift+m"
 type = "plugin_action"
 command = "worktrunk.merge"
 description = "Worktree: merge into the target branch"
+
+# "remove" was left unbound on purpose until the picker supported multi-select
+# + background removal — now that it does, prefix+shift+d (the obvious pick)
+# is still close_workspace, so this uses shift+r instead.
+[[keys.command]]
+key = "prefix+shift+r"
+type = "plugin_action"
+command = "worktrunk.remove"
+description = "Worktree: remove (multi-select)"
 
 # Browser pane via terminal-browser (github.com/zenbu-labs/terminal-browser).
 # Not a herdr plugin: a standalone Kitty-graphics binary launched as a plain
