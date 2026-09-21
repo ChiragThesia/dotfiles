@@ -13,7 +13,15 @@
 # The merge is idempotent (jq dedup on the array fields), safe to rerun.
 # claude-settings-patch.json hash: {{ include "claude-settings-patch.json" | sha256sum }}
 #
-# enabledPlugins / extraKnownMarketplaces are plain objects, so a `*` merge
+# Merge direction is `$new * $cur`: the patch supplies DEFAULTS, and any key
+# already set locally wins. The original was `$cur * $new` (patch wins), which
+# quietly reverted deliberate local choices on every rerun -- a `model` set to
+# anything other than the patch's value got stomped, and a rerun triggers on
+# any edit to this script, not just to the patch. The tradeoff of the flip:
+# changing a value in claude-settings-patch.json no longer reaches a machine
+# that already has that key. Delete the key locally to pick up the new default.
+#
+# enabledPlugins / extraKnownMarketplaces are plain objects, so the merge
 # unions keys without disturbing anything already there. permissions.ask/deny
 # and hooks.PostToolUse are arrays, which `*` would replace outright, so
 # those are concatenated and deduplicated by hand instead.
@@ -27,7 +35,7 @@ mkdir -p "$HOME/.claude"
 
 jq -s '
   .[0] as $cur | .[1] as $new |
-  ($cur * $new) as $merged |
+  ($new * $cur) as $merged |
   $merged
   | .permissions.deny = (($cur.permissions.deny // []) + ($new.permissions.deny // []) | unique)
   | .permissions.ask  = (($cur.permissions.ask  // []) + ($new.permissions.ask  // []) | unique)
