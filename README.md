@@ -27,6 +27,39 @@ Already have Homebrew and prefer that path, or already have chezmoi: `brew insta
 chezmoi && chezmoi init --apply chiragthesia/dotfiles` works identically — `install.sh`
 is just a convenience wrapper around exactly that.
 
+### Keeping your own version of a file
+
+A couple of the files here are ones a machine plausibly already has its own real
+version of — `~/.claude/CLAUDE.md` above all, which tends to carry personal or
+work-specific content. `chezmoi apply` would overwrite them, with no prompt and no
+backup.
+
+`.chezmoiignore` reads an opt-out marker per file:
+
+```bash
+mkdir -p ~/.config/chezmoi/keep-local
+touch ~/.config/chezmoi/keep-local/claude-md   # keep your own ~/.claude/CLAUDE.md
+touch ~/.config/chezmoi/keep-local/worktrunk   # keep your own ~/.config/worktrunk/config.toml
+```
+
+**`install.sh` seeds these for you**, for whichever of those files already exists when
+you run it — so a first install never clobbers what's already there. A clean machine
+has neither file, seeds nothing, and gets the full setup. Create a marker by hand on a
+machine where a file diverges *later*.
+
+Confirm what a machine is actually ignoring:
+
+```bash
+chezmoi execute-template < "$(chezmoi source-path)/.chezmoiignore"
+```
+
+A protected file shows up in that output. To stop protecting one and take this repo's
+copy instead: `rm ~/.config/chezmoi/keep-local/<marker> && chezmoi apply`.
+
+Markers rather than a hostname list, which is the obvious alternative: a hostname list
+has to name real machines in a public repo, and it breaks silently the moment a machine
+is renamed. A marker is local, self-describing, and says what it protects.
+
 ## Linux / headless boxes
 
 `Brewfile` (cross-platform tools) and `Brewfile.darwin` (just `cask "ghostty"`) are
@@ -84,6 +117,15 @@ dotsync "message"       # same, with your own commit message
 dotsync -y              # push without asking
 dotsync -n              # never push this run; just pull and apply
 ```
+
+Before it captures anything, `dotsync` applies any file this machine is merely
+*behind* on, reporting them under `==> Applying files this machine is behind on`.
+That step exists because `chezmoi re-add` compares each target against the source
+rather than against what chezmoi last wrote: on a machine that pulled but never
+applied, re-add would capture the stale copies and push a revert of someone else's
+commit back out. The secret scan cannot catch that, since a revert introduces no new
+secret. `chezmoi status` column 2 tells the two apart — `" M"` is stale, `"MM"` is a
+real local edit — and only the stale set is applied first.
 
 ## For Claude Code sessions working on this repo — follow exactly, in order
 
