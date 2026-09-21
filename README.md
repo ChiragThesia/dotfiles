@@ -221,3 +221,11 @@ would not be).
 is hand-authored from scratch, not copied from any real settings file — the machine
 this was built on has a live credential in that file's `env` block, which is why
 it's never read into this repo at all, not even temporarily.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Take what's useful.
+
+One exception: `dot_config/nvim/` is a [LazyVim](https://github.com/LazyVim/starter)
+starter tree, and `dot_config/nvim/LICENSE` is LazyVim's own Apache-2.0. That file
+governs what it ships with; the MIT above covers the changes made here.

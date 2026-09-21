@@ -2,6 +2,7 @@
 # README.md / Brewfile / claude-settings-patch.json straight into the home
 # directory. Scripts still reach them via {{ .chezmoi.sourceDir }}.
 README.md
+LICENSE
 install.sh
 Brewfile
 Brewfile.darwin
