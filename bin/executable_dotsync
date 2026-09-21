@@ -54,6 +54,28 @@ git_net() {
   git -C "$SRC" -c credential.helper= "${auth[@]}" "$@"
 }
 
+# `chezmoi re-add` compares each target against the SOURCE, not against what
+# chezmoi last wrote, so a file the source has moved ahead of gets captured in
+# its stale form and the newer source content is silently reverted. Column 2 of
+# `chezmoi status` separates the two cases:
+#
+#   " M"  source moved ahead and this machine never applied it -- stale, NOT an
+#         edit. re-add here reverts someone else's commit and pushes it back.
+#   "MM"  genuinely edited here since chezmoi wrote it -- what re-add is for.
+#
+# Hit for real on 2026-09-21: a machine that had pulled but never applied ran
+# dotsync, and re-add put scrubbed strings back on public main. Apply the stale
+# ones first so re-add only ever sees real local edits. Not a reordering of the
+# pull -- pulling before re-add would make EVERY incoming change look stale.
+STALE="$(chezmoi status 2>/dev/null | grep '^ M' | cut -c4- || true)"
+if [ -n "$STALE" ]; then
+  echo "==> Applying files this machine is behind on (not local edits)"
+  printf '%s\n' "$STALE" | sed 's/^/    /'
+  printf '%s\n' "$STALE" | while IFS= read -r p; do
+    [ -n "$p" ] && chezmoi apply -- "$HOME/$p"
+  done
+fi
+
 echo "==> Capturing local edits to managed files"
 chezmoi re-add
 
