@@ -27,7 +27,7 @@ claude = [["state_icon", { token = "tab", dim = false, bold = true, fg = "#c0caf
 # [worktrees] left unset -- herdr's own native worktree creation (right-click
 # a workspace, alt+shift+g -> new_worktree) stays on its default location
 # (~/.herdr/worktrees), separate from worktrunk's convention
-# (your worktrunk worktree root, see ~/.config/worktrunk/config.toml).
+# (~/Desktop/work/project/wt/<branch>/<repo>, see ~/.config/worktrunk/config.toml).
 
 
 [keys]

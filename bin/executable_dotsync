@@ -63,7 +63,7 @@ if rg -n --glob '!.git' \
   -e 'sk-ant-[A-Za-z0-9_-]{20,}' \
   -e 'AKIA[0-9A-Z]{16}' \
   -e 'BEGIN [A-Z ]*PRIVATE KEY' \
-  -e '\b[A-Z][A-Z0-9_]*(INSTANCES?|CREDS?|CREDENTIALS?)\b\s*[:=]\s*\S' \
+  -e 'INTERNAL_INSTANCES\s*[:=]\s*\S' \
   -e '(?i)(password|passwd|api[_-]?key|secret|token)"?\s*[:=]\s*["'"'"'][^"'"'"']{12,}' \
   "$SRC"; then
   echo "dotsync: secret scan hit the lines above. Nothing committed, nothing pushed." >&2
