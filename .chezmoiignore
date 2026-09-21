@@ -10,20 +10,19 @@ docs
 
 # Files a given machine keeps its own real, diverged version of. Applying
 # this repo's generic copy there would silently revert real customization.
-# Scoped per machine, per file: an entry only belongs here on a machine that
-# actually diverges, otherwise that machine silently stops tracking the repo.
+# Opt out per machine, per file, by touching a marker -- an entry only
+# belongs here on a machine that actually diverges, otherwise that machine
+# silently stops tracking the repo.
 #
-# personal-machine is a real second machine (this is where dotsync was
-# written). Its ~/.claude/CLAUDE.md is a lean global one, deliberately not
-# this repo's Acme-heavy copy. Its worktrunk config is byte-identical
-# to the repo's, so it is NOT listed below -- it should keep tracking.
+#   mkdir -p ~/.config/chezmoi/keep-local
+#   touch ~/.config/chezmoi/keep-local/claude-md      # keep my own CLAUDE.md
+#   touch ~/.config/chezmoi/keep-local/worktrunk      # keep my own worktrunk config
 #
-# work-machine is this repo's authoring machine. Its real worktrunk config
-# carries post-start hooks (open-wt-session, codegraph) this repo's copy
-# deliberately strips.
-{{ if or (eq .chezmoi.hostname "personal-machine") (eq .chezmoi.hostname "work-machine") }}
+# Markers, not hostnames: a hostname list has to name real machines in a
+# public repo, and it silently breaks the moment a machine is renamed.
+{{ if stat (joinPath .chezmoi.homeDir ".config/chezmoi/keep-local/claude-md") }}
 .claude/CLAUDE.md
 {{ end }}
-{{ if eq .chezmoi.hostname "work-machine" }}
+{{ if stat (joinPath .chezmoi.homeDir ".config/chezmoi/keep-local/worktrunk") }}
 .config/worktrunk/config.toml
 {{ end }}

@@ -3,8 +3,8 @@
 # a MERGE, not an overwrite: this file commonly already has real, personal
 # content on any machine that already uses Claude Code, and this patch is
 # hand-authored from scratch -- it is never derived from a real settings.json
-# (which on the source machine also carries a live credential in
-# env.INTERNAL_INSTANCES that must never leave that machine).
+# (which on the source machine also carries a live credential in its
+# env block that must never leave that machine).
 #
 # run_onchange_, not run_once_: this script only reads claude-settings-patch.json
 # at runtime, so chezmoi's run_once tracking (hashes the script's own

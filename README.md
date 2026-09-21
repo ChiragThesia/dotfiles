@@ -120,7 +120,7 @@ approach failed during testing.
    ```
 4. **Run a secret scan over the whole tree before every commit, no exceptions:**
    ```bash
-   rg -i 'password|secret|INTERNAL_INSTANCES|api[_-]?key|token.*:.*[A-Za-z0-9]{20}' "$(chezmoi source-path)" --glob '!.git'
+   rg -i 'password|secret|api[_-]?key|token.*:.*[A-Za-z0-9]{20}' "$(chezmoi source-path)" --glob '!.git'
    ```
    Any real hit (not a git commit hash, not prose mentioning the word "token") means
    **stop and do not commit** until it's resolved. This is the single most important
@@ -195,18 +195,18 @@ approach failed during testing.
 
 ## Deliberately not here
 
-Anything Acme-specific: the TICKETS/internal-mcp setup, the `project-a` pre-tool-use
-hook, `gh-dash`/`wt-new-session`/`gh-dash-open-pr` (wired to SN repos and a specific
-GitHub login), the `project-b`/`acme`/`cc-marketplace` plugin marketplaces, the
-`now/homebrew-devtools` tap, the `gh-dash` alias (hardcodes `code.internal.invalid`), the
-500-line `ai-search()` function and `fastzboot`/`gll-snapshot()` (INTERNAL build
-tooling). Also `terminal-browser` and its `alt+b` herdr binding — broken by an
+Anything work-specific: internal MCP servers, an internal pre-tool-use hook, the
+`gh-dash`/`wt-new-session`/`gh-dash-open-pr` helpers (wired to private repos, an
+enterprise GitHub host and a specific login), private plugin marketplaces and
+Homebrew taps, and a large internal search/build toolchain. Those are all tied to
+one employer's infrastructure and would be dead weight or broken anywhere else.
+Also `terminal-browser` and its `alt+b` herdr binding — broken by an
 unresolved upstream bug
 ([zenbu-labs/terminal-browser#97](https://github.com/zenbu-labs/terminal-browser/issues/97));
 add it back once that's fixed.
 
-Also excluded, not SN-specific but not generically useful either: `oktafy()`/
-`workondw()` (tied to a "a-previous-employer" job/project context, reference undefined env
+Also excluded, not work-specific but not generically useful either: `oktafy()`/
+`workondw()` (tied to an old job/project context, reference undefined env
 vars), iTerm2-specific bits (`_iterm2_tab_color`, iTerm2 shell integration — this
 whole setup is Ghostty-primary), and the `claude-usage`/`claude-worktree` aliases
 (point at `~/.claude/scripts/*.sh` that were never verified to still exist or work —
@@ -219,5 +219,5 @@ would not be).
 
 `~/.claude/settings.json`'s merged patch (`claude-settings-patch.json` in this repo)
 is hand-authored from scratch, not copied from any real settings file — the machine
-this was built on has a live credential in that file's `env.INTERNAL_INSTANCES`, which is
-why it's never read into this repo at all, not even temporarily.
+this was built on has a live credential in that file's `env` block, which is why
+it's never read into this repo at all, not even temporarily.

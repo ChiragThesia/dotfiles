@@ -7,8 +7,8 @@ fetch = "git fetch origin --quiet"
 
 # No [post-start] here: the original had `open = "open-wt-session ..."` and
 # `deps = "... codegraph sync ..."`. Both are excluded from this repo --
-# open-wt-session is wired to SN-specific gh-dash repos/logins, and
-# codegraph is an SN-internal tool. Shipping either would error on every
+# open-wt-session is wired to private gh-dash repos/logins, and codegraph
+# is an internal tool not shipped here. Shipping either would error on every
 # worktree creation on a machine that doesn't have them. Add your own
 # [post-start] here if you want an equivalent for wherever you're running
 # this -- see herdr's worktrunk plugin (`` ` ``+shift+G in herdr) for how

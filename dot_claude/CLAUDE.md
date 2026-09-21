@@ -18,7 +18,7 @@ Substitutions always active. Reach for default tool, check table first:
 | `cat CLAUDE.md` to recall rules | Trust loaded context | CLAUDE.md already injected at session start |
 | bash/sed/awk to edit files | Edit tool (default) | Visible diffs, read-first safety, auditable |
 | `pnpm test -- <file>` / `npm test -- <file>` to run one spec | `pnpm exec vitest run <file>` (or `npx vitest run <file>`) | The `--` is passed through to `vitest run`, which **defeats the path filter** and runs the WHOLE suite. With no worker cap that fans out to one fork per CPU (e.g. 14), and memory-heavy specs OOM the machine (exit 137). |
-| plain `gh ...` for SN repos (project-a-*, project-b-*, etc.) | `GH_HOST=code.internal.invalid gh ...` | SN code lives on the enterprise GHE at `code.internal.invalid`; bare `gh` defaults to github.com and fails with "Could not resolve to a Repository". Set `GH_HOST=code.internal.invalid` (already authed there) for `pr create`, `pr view`, `api`, etc. `--repo dev/<name>` still needs the host set. |
+| plain `gh ...` against an enterprise GitHub repo | `GH_HOST=<your-ghe-host> gh ...` | Bare `gh` defaults to github.com and fails with "Could not resolve to a Repository". Set `GH_HOST` for `pr create`, `pr view`, `api`, etc. `--repo <org>/<name>` still needs the host set. |
 
 **Not suggestions.** Catch self about to type `grep`, `python -m json.tool` — stop, use correct tool.
 
@@ -92,7 +92,7 @@ clear handoff artifacts saved to files.
 
 ## PR & Code Review
 
-**No em dashes in PR comments or replies.** They read as AI-generated and reveal authorship. Use commas or periods instead. Short sentences, casual tone.
+**PR comments: plain and short.** Commas and periods over em dashes, short sentences, casual tone.
 
 **PR reviews: issues only.** Leave a comment only when there is an important, actionable issue. Zero inline comments is the correct answer for a solid PR — do not pad to look thorough. Do not post affirmations, concurrences, speculative future risks, or minor wording nitpicks. If nothing clears the bar, post nothing.
 
@@ -113,26 +113,6 @@ Never kill Chrome or MCP processes belonging to *another* live Claude session wi
 
 ---
 
-## Acme MCP (`internal-mcp`)
-
-Config lives in `~/.claude.json` under `mcpServers.internal-mcp.env`, not in `~/.config/internal-mcp/` (that dir only holds an installation-id).
-
-- **Generic tools** (`get_table_data`, `get_table_record`, `create_table_record`, `get_table_record_count`, etc. — no `_bt1`/`_support` suffix) hit `INTERNAL_BASE_URL` by default (basic auth via `INTERNAL_USER`/`INTERNAL_PASS`). In this env `INTERNAL_BASE_URL=http://localhost:8080`, `INTERNAL_USER=admin`, `INTERNAL_PASS=admin` — **these tools already reach the local dev instance on :8080** unless an `instanceUrl` param is passed.
-- **`instanceUrl` param** (present on the generic tools) overrides the target to any `https?://<origin>` — credentials auto-fetched/browser-auth'd via the SuperNow store. Use this to hit a third instance beyond TICKETS/Support.
-- **`_bt1`/`_support` suffixed tools** are hardcoded to `https://instance-one.internal.invalid` / `https://instance-two.internal.invalid` (`BT1_URL`/`SUPPORT_URL` env vars) — they ignore `INTERNAL_BASE_URL` and cannot be redirected to localhost or any other instance.
-- `check_acme_auth_status` reports TICKETS/Support browser-auth state only; it does not reflect the generic tools' basic-auth path to `INTERNAL_BASE_URL`.
-
-Installed via Homebrew (`internal-mcp-installer` tap `a-colleague/internal-mcp-installer`), source at `code.internal.invalid/a-colleague/internal-mcp`. No need to clone the repo to answer config/capability questions — read `~/.claude.json`'s env block first.
-
----
-
-## Ticket Creation (TICKETS)
-
-Create/update stories via `internal_ticket_mcp` (`create_update_story`), not `internal-mcp`'s `_bt1` tools — the latter needs a manual `refresh_connection` + browser SSO round-trip most sessions won't have done.
-Resolve any sys_ids in a pasted TICKETS URL (sprint, assignment_group, assigned_to) via `query_bt1_table` first — don't guess names from the sys_id alone.
-
----
-
 ## Git Commits
 
 Complete all work and verify end-to-end before committing. Do not commit after each implementation step — commit once when everything works and the user confirms.
@@ -144,9 +124,9 @@ Complete all work and verify end-to-end before committing. Do not commit after e
 Create worktrees as sibling directories named `<repo-name>.<branch-name>` (slashes → hyphens).
 
 Standard branch prefixes:
-- `maint/` — maintenance/cleanup (e.g. `maint/project-a-cart-cleanup`)
+- `maint/` — maintenance/cleanup (e.g. `maint/cart-cleanup`)
 - `scratch/` — experimental, no ticket (e.g. `scratch/execution-run`)
-- `STRY<number>/` — story work (e.g. `TICKET-12345/add-filter`)
+- `<TICKET-ID>/` — ticket work (e.g. `PROJ-1234/add-filter`)
 
 Always ask the user for the branch name before creating the worktree.
 
@@ -159,11 +139,3 @@ All scripts must work on macOS first and foremost.
 **Tool substitutions (enforced — see Hardwired Reflexes above):**
 - `jq` instead of `python3 -m json.tool`
 - `rg` instead of `grep` / `egrep`
-
----
-
-## Knowledge Base
-
-Compiled INTERNAL wiki at `~/Desktop/work-wiki/wiki/`. Contains synthesized knowledge about PROJECT-A (assets, search, domains, catalog, relationships, ACL, UI patterns, SUBSYS-A, toolchain) + platform (Internal SDK, SUBSYS-B, design system, Component-Lib, Platform-Lib, PROJECT-B/Assist).
-
-Working any INTERNAL task, read `~/Desktop/work-wiki/wiki/INDEX.md` for orientation, then pull relevant topic articles. Topic articles in `wiki/topics/`, concept articles in `wiki/concepts/`.
