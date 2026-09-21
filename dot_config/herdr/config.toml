@@ -1,7 +1,7 @@
 onboarding = false
 
 [ui.toast]
-delivery = "system"
+delivery = "herdr"
 
 [ui]
 status_indicators = "symbols"
@@ -155,6 +155,15 @@ key = "prefix+shift+m"
 type = "plugin_action"
 command = "worktrunk.merge"
 description = "Worktree: merge into the target branch"
+
+# open-current bases the new branch on whatever branch the invoking workspace
+# is currently on (not the default branch) — e.g. run this from a feature
+# branch's workspace to fork a new branch+worktree off that feature branch.
+[[keys.command]]
+key = "prefix+shift+c"
+type = "plugin_action"
+command = "worktrunk.open-current"
+description = "Worktree: switch / create from current branch"
 
 # "remove" was left unbound on purpose until the picker supported multi-select
 # + background removal — now that it does, prefix+shift+d (the obvious pick)
